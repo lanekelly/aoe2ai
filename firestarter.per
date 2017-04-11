@@ -24,6 +24,7 @@
 (defconst goal-dark-rush 1)
 (defconst goal-max-militia-reached 2)
 (defconst goal-age-status 3)
+(defconst goal-flood-spearmen 4)
 
 (defconst start-dark-rush-militia-count 5)
 (defconst end-dark-rush-militia-count 15)
@@ -45,24 +46,28 @@
 (set-goal goal-dark-rush gv-dr-building)
 (set-goal goal-max-militia-reached gv-no)
 (set-goal goal-age-status gv-dark-age)
+(set-goal goal-flood-spearmen gv-no)
 (disable-self))
 
 ; -----------------------------------------------------------------------------
 
 ; ----- Strategic Numbers -----------------------------------------------------
 
-; All units scout until the first berries or sheep are found.
-
 (defrule
 (true)
 =>
 (set-strategic-number sn-enable-patrol-attack 1)
+; [OFF] (set-strategic-number sn-cap-civilian-builders 100)
 (disable-self))
 
 (defrule
 (true)
 =>
 (set-strategic-number sn-maximum-food-drop-distance 15)
+(set-strategic-number sn-maximum-wood-drop-distance 15)
+(set-strategic-number sn-maximum-stone-drop-distance 25)
+(set-strategic-number sn-maximum-gold-drop-distance 25)
+(set-strategic-number sn-mill-max-distance 15)
 (set-strategic-number sn-maximum-hunt-drop-distance 35)
 (set-strategic-number sn-enable-boar-hunting 2)  ; 1 = boar, deer; 2 = boar only
 (disable-self))
@@ -134,6 +139,32 @@
 (set-goal goal-age-status gv-feudal-age)
 (disable-self))
 
+(defrule
+(can-research castle-age)
+=>
+(research castle-age)
+(set-goal goal-age-status gv-advancing-to-castle)
+(chat-local-to-self "Heading to Castle!"))
+
+(defrule
+(current-age == castle-age)
+=>
+(set-goal goal-age-status gv-castle-age)
+(disable-self))
+
+(defrule
+(can-research imperial-age)
+=>
+(research imperial-age)
+(set-goal goal-age-status gv-advancing-to-imperial)
+(chat-local-to-self "Heading to Imperial!!"))
+
+(defrule
+(current-age == imperial-age)
+=>
+(set-goal goal-age-status gv-imperial-age)
+(disable-self))
+
 ; -----------------------------------------------------------------------------
 
 ; ----- Economy ---------------------------------------------------------------
@@ -142,8 +173,8 @@
 (goal goal-age-status gv-dark-age)
 =>
 ; Unit heavy in dark age, prioritize food
-(set-strategic-number sn-food-gatherer-percentage 85)
-(set-strategic-number sn-wood-gatherer-percentage 15)
+(set-strategic-number sn-food-gatherer-percentage 90)
+(set-strategic-number sn-wood-gatherer-percentage 10)
 (set-strategic-number sn-gold-gatherer-percentage 0)
 (set-strategic-number sn-stone-gatherer-percentage 0))
 
@@ -154,6 +185,32 @@
 (set-strategic-number sn-wood-gatherer-percentage 50)
 (set-strategic-number sn-gold-gatherer-percentage 10)
 (set-strategic-number sn-stone-gatherer-percentage 0))
+
+(defrule
+(goal goal-age-status gv-feudal-age)
+(building-type-count-total blacksmith > 0)
+(building-type-count-total market > 0)
+=>
+(set-strategic-number sn-food-gatherer-percentage 55)
+(set-strategic-number sn-wood-gatherer-percentage 30)
+(set-strategic-number sn-gold-gatherer-percentage 10)
+(set-strategic-number sn-stone-gatherer-percentage 5))
+
+(defrule
+(current-age == castle-age)
+=>
+(set-strategic-number sn-food-gatherer-percentage 50)
+(set-strategic-number sn-wood-gatherer-percentage 30)
+(set-strategic-number sn-gold-gatherer-percentage 10)
+(set-strategic-number sn-stone-gatherer-percentage 10))
+
+(defrule
+(current-age == imperial-age)
+=>
+(set-strategic-number sn-food-gatherer-percentage 45)
+(set-strategic-number sn-wood-gatherer-percentage 30)
+(set-strategic-number sn-gold-gatherer-percentage 15)
+(set-strategic-number sn-stone-gatherer-percentage 10))
 
 ; -----------------------------------------------------------------------------
 
@@ -185,20 +242,38 @@
 (defrule
 (goal goal-dark-rush gv-dr-finished)
 =>
-(set-strategic-number sn-maximum-hunt-drop-distance 35)
-(chat-local-to-self "Dropping hunt distance")
+(set-strategic-number sn-maximum-hunt-drop-distance 15)
+; [OFF] (set-strategic-number sn-enable-boar-hunting 0)
+(chat-local-to-self "Dropping hunt distance. The boar hunt is over for now.")
 (disable-self))
 
 ; -----------------------------------------------------------------------------
 
 ; ----- Tech ------------------------------------------------------------------
 
+; ----- Dark Age ----------------------
 (defrule
 (food-amount < 50)
 (can-research ri-loom)
 =>
 (research ri-loom)
 (chat-local-to-self "Food low. Researching loom."))
+
+; ----- Feudal Age --------------------
+
+(defrule
+(can-research ri-wheel-barrow)
+=>
+(research ri-wheel-barrow)
+(chat-local-to-self "Researching wheel barrow."))
+
+; ----- Imperial Age ------------------
+
+(defrule
+(can-research ri-murder-holes)
+=>
+(research ri-murder-holes)
+(chat-local-to-self "Researching murder holes."))
 
 ; -----------------------------------------------------------------------------
 
@@ -220,8 +295,8 @@
 =>
 (build house))
 
-; default - fallback once rush is over
 (defrule
+(goal goal-dark-rush gv-dr-finished)
 (can-build house)
 (housing-headroom < 4)
 (population-headroom > 3)
@@ -284,6 +359,71 @@
 =>
 (build mining-camp))
 
+; ----- Feudal ------------------------
+
+(defrule
+(current-age >= feudal-age)
+(building-type-count-total blacksmith < 1)
+(can-build blacksmith)
+=>
+(build blacksmith))
+
+(defrule
+(current-age == feudal-age)
+(building-type-count-total market < 1)
+(can-build market)
+=>
+(build market))
+
+(defrule
+(current-age >= feudal-age)
+(building-type-count-total blacksmith > 0)
+(building-type-count-total market > 0)
+(resource-found stone)
+(dropsite-min-distance stone > 5)
+(dropsite-min-distance stone < 255)
+(building-type-count mining-camp < 4)
+(can-build mining-camp)
+=>
+(build mining-camp))
+
+; ----- Castle ------------------------
+
+(defrule
+(can-build castle)
+=>
+(build castle))
+
+(defrule
+(building-type-count-total town-center < 6)
+(can-build town-center)
+=>
+(build town-center))
+
+(defrule
+(or (current-age == castle-age)
+    (current-age == imperial-age))
+(can-build house)
+(housing-headroom < 10)
+(population-headroom > 3)
+=>
+(build house))
+
+; ----- Imperial ----------------------
+
+(defrule
+(building-type-count-total university < 1)
+(can-build university)
+=>
+(build university))
+
+(defrule
+(goal goal-flood-spearmen gv-yes)
+(building-type-count-total barracks < 10)
+(can-build barracks)
+=>
+(build barracks))
+
 ; -----------------------------------------------------------------------------
 
 ; ----- Unit training ---------------------------------------------------------
@@ -319,6 +459,14 @@
 =>
 (train militiaman-line))
 
+; -------------------------------------
+
+(defrule
+(goal goal-flood-spearmen gv-yes)
+(can-train spearman-line)
+=>
+(train spearman-line))
+
 ; -----------------------------------------------------------------------------
 
 ; ----- Attack rules ----------------------------------------------------------
@@ -339,5 +487,14 @@
 (disable-timer 1)
 (enable-timer 1 60)
 (chat-local-to-self "Attack now!"))
+
+(defrule
+(or (current-age == castle-age)
+    (current-age == imperial-age))
+(or (town-under-attack)
+    (civilian-population > 100))
+=>
+(set-goal goal-flood-spearmen gv-yes)
+(chat-local-to-self "Let the flood waters gather!"))
 
 ; -----------------------------------------------------------------------------
