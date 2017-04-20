@@ -19,7 +19,7 @@
 
 (defconst max-num-dark-villagers 22)
 (defconst max-town-size 60)
-(defconst max-dark-rush-barracks 3)
+
 
 (defconst gv-army-status-idle 1)
 (defconst gv-army-status-attacking 2)
@@ -33,6 +33,7 @@
 (defconst generic-defend-timer 4)
 (defconst increase-town-size-timer 5)
 (defconst dark-rush-forward-build-timer 6)
+(defconst goal-max-dark-rush-barracks 7)
 
 (defconst goal-dark-rush 1)
 (defconst goal-max-militia-reached 2)
@@ -43,6 +44,8 @@
 (defconst goal-tsa 8)
 (defconst goal-ri-queued-blacksmith 9)
 (defconst goal-dark-rush-forward-build 10)
+(defconst goal-dark-rush-building-tc 11)
+(defconst goal-dark-rush-btc-done 12)
 
 (defconst start-dark-rush-militia-count 5)
 (defconst end-dark-rush-militia-count 15)
@@ -77,6 +80,9 @@
 (set-goal goal-tsa gv-no)
 (set-goal goal-ri-queued-blacksmith gv-no)
 (set-goal goal-dark-rush-forward-build gv-drbf-not-started)
+(set-goal goal-dark-rush-building-tc gv-no)
+(set-goal goal-max-dark-rush-barracks 2)
+(set-goal goal-dark-rush-btc-done gv-no)
 (disable-self))
 
 ; -----------------------------------------------------------------------------
@@ -283,6 +289,12 @@
 ; ----- Dark Age Rush ---------------------------------------------------------
 
 (defrule
+(can-build town-center)
+=>
+(build-forward town-center)
+(chat-local-to-self "Building town-center!"))
+
+(defrule
 (goal goal-dark-rush gv-dr-building)
 (unit-type-count-total militiaman-line > start-dark-rush-militia-count)
 (not    (players-building-count every-enemy <= 0))
@@ -302,20 +314,44 @@
 
 (defrule
 (goal goal-dark-rush-forward-build gv-drbf-building)
-(building-type-count-total barracks < max-dark-rush-barracks)
+(building-type-count-total barracks < goal-max-dark-rush-barracks)
 (can-build barracks)
 =>
 (build-forward barracks))
 
 (defrule
 (goal goal-dark-rush-forward-build gv-drbf-building)
-(can-build town-center)
+(goal goal-dark-rush-building-tc gv-no)
 =>
-(build-forward town-center))
+(delete-building town-center)
+(delete-building mill)
+(delete-building lumber-camp)
+
+(up-assign-builders c: town-center c: 6)
+(chat-local-to-self "Move TC!"))
 
 (defrule
+(goal goal-dark-rush-building-tc gv-yes)
+(building-type-count town-center == 1)
+=>
+(up-modify-goal goal-max-dark-rush-barracks c:+ 1)
+(chat-local-to-self "New TC built!"))
+
+(defrule
+(goal goal-dark-rush-building-tc gv-yes)
+(building-type-count mill < 1)
+=>
+(build-forward mill))
+
+(defrule
+(building-type-count town-center == 0)
+(goal goal-dark-rush-building-tc gv-no)
+=>
+(set-goal goal-dark-rush-building-tc gv-yes)
+)
+(defrule
 (goal goal-dark-rush-forward-build gv-drbf-building)
-(building-type-count barracks == max-dark-rush-barracks) ; built
+(building-type-count barracks == goal-max-dark-rush-barracks) ; built
 =>
 (set-goal goal-dark-rush-forward-build gv-drbf-built)
 (up-assign-builders c: barracks c: 1)
@@ -323,7 +359,7 @@
 
 (defrule
 (goal goal-dark-rush-forward-build gv-drbf-built)
-(building-type-count barracks < max-dark-rush-barracks) ; destroyed
+(building-type-count barracks < goal-max-dark-rush-barracks) ; destroyed
 =>
 (set-goal goal-dark-rush-forward-build gv-drbf-finished)
 (chat-local-to-self "Forward barracks destroyed..."))
