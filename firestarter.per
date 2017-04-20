@@ -19,6 +19,7 @@
 
 (defconst max-num-dark-villagers 22)
 (defconst max-town-size 60)
+(defconst max-dark-rush-barracks 3)
 
 (defconst gv-army-status-idle 1)
 (defconst gv-army-status-attacking 2)
@@ -30,9 +31,8 @@
 (defconst dark-rush-timer 2)
 (defconst scouting-timer 3)
 (defconst generic-defend-timer 4)
-(defconst generic-attack-timer 5)
-(defconst increase-town-size-timer 6)
-
+(defconst increase-town-size-timer 5)
+(defconst dark-rush-forward-build-timer 6)
 
 (defconst goal-dark-rush 1)
 (defconst goal-max-militia-reached 2)
@@ -42,6 +42,7 @@
 (defconst goal-army-composition 7)
 (defconst goal-tsa 8)
 (defconst goal-ri-queued-blacksmith 9)
+(defconst goal-dark-rush-forward-build 10)
 
 (defconst start-dark-rush-militia-count 5)
 (defconst end-dark-rush-militia-count 15)
@@ -50,10 +51,17 @@
 (defconst gv-dr-rushing 2)
 (defconst gv-dr-finished 3)
 
+(defconst gv-drbf-not-started 1) ; dark rush forward build states
+(defconst gv-drbf-building 2)
+(defconst gv-drbf-built 3)
+(defconst gv-drbf-finished 4)
+
 #load-if-defined UP-POCKET-POSITION
 (defconst scouting-type position-opposite)
+(defconst scout-unlock-time 300)
 #else
 (defconst scouting-type position-flank)
+(defconst scout-unlock-time 180)
 #end-if
 
 ; Initial state
@@ -68,6 +76,7 @@
 (set-goal goal-army-composition gv-army-comp-defensive)
 (set-goal goal-tsa gv-no)
 (set-goal goal-ri-queued-blacksmith gv-no)
+(set-goal goal-dark-rush-forward-build gv-drbf-not-started)
 (disable-self))
 
 ; -----------------------------------------------------------------------------
@@ -118,8 +127,8 @@
 (set-strategic-number sn-percent-civilian-explorers 0)
 (set-strategic-number sn-minimum-civilian-explorers 0)
 (set-strategic-number sn-cap-civilian-explorers 0)
-(set-strategic-number sn-total-number-explorers 1)
-(set-strategic-number sn-number-explore-groups 1)
+(set-strategic-number sn-total-number-explorers 5)
+(set-strategic-number sn-number-explore-groups 5)
 (disable-self))
 
 (defrule
@@ -138,12 +147,20 @@
 
 (defrule
 (timer-triggered scouting-timer)
-(game-time < 300)
+(game-time < scout-unlock-time)
 (players-building-count every-enemy <= 0)
 (military-population >= 1)
 =>
 (up-send-scout group-type-land-explore scouting-type)
 (enable-timer scouting-timer 5));
+
+(defrule
+(players-building-count any-enemy > 0)
+=>
+(set-strategic-number sn-total-number-explorers 1)
+(set-strategic-number sn-number-explore-groups 1)
+(chat-local-to-self "Dropping extra explorers")
+(disable-self))
 
 ; ----- Castle, Imperial --------------
 
@@ -272,7 +289,44 @@
 (game-time < 480) ; after 8 min, don't bother
 =>
 (set-goal goal-dark-rush gv-dr-rushing)
+(enable-timer dark-rush-forward-build-timer 1)
 (chat-local-to-self "Rushing!"))
+
+(defrule
+(timer-triggered dark-rush-forward-build-timer)
+=>
+(disable-timer dark-rush-forward-build-timer)
+(set-goal goal-dark-rush-forward-build gv-drbf-building)
+(up-assign-builders c: barracks c: 4)
+(chat-local-to-self "Building forward!"))
+
+(defrule
+(goal goal-dark-rush-forward-build gv-drbf-building)
+(building-type-count-total barracks < max-dark-rush-barracks)
+(can-build barracks)
+=>
+(build-forward barracks))
+
+(defrule
+(goal goal-dark-rush-forward-build gv-drbf-building)
+(can-build town-center)
+=>
+(build-forward town-center))
+
+(defrule
+(goal goal-dark-rush-forward-build gv-drbf-building)
+(building-type-count barracks == max-dark-rush-barracks) ; built
+=>
+(set-goal goal-dark-rush-forward-build gv-drbf-built)
+(up-assign-builders c: barracks c: 1)
+(chat-local-to-self "Forward barracks built, continue the rush!"))
+
+(defrule
+(goal goal-dark-rush-forward-build gv-drbf-built)
+(building-type-count barracks < max-dark-rush-barracks) ; destroyed
+=>
+(set-goal goal-dark-rush-forward-build gv-drbf-finished)
+(chat-local-to-self "Forward barracks destroyed..."))
 
 (defrule
 (goal goal-dark-rush gv-dr-building)
@@ -284,9 +338,18 @@
 (defrule
 (goal goal-dark-rush gv-dr-rushing)
 (game-time > 600)
+(goal goal-dark-rush-forward-build gv-drbf-finished)
 =>
 (set-goal goal-dark-rush gv-dr-finished)
-(chat-local-to-self "Finished rushing."))
+(chat-local-to-self "Finished rushing 1."))
+
+(defrule
+(goal goal-dark-rush gv-dr-rushing)
+(game-time > 720)
+=>
+(set-goal goal-dark-rush gv-dr-finished)
+(set-goal goal-dark-rush-forward-build gv-drbf-finished)
+(chat-local-to-self "Finished rushing 2."))
 
 (defrule
 (goal goal-dark-rush gv-dr-finished)
@@ -302,11 +365,12 @@
 
 ; ----- Dark Age ----------------------
 (defrule
-(food-amount < 50)
+(or (food-amount < 50)
+    (goal goal-dark-rush-forward-build gv-drbf-building))
 (can-research ri-loom)
 =>
 (research ri-loom)
-(chat-local-to-self "Food low. Researching loom."))
+(chat-local-to-self "Researching loom."))
 
 ; ----- Feudal Age --------------------
 
@@ -454,7 +518,7 @@
 
 ; ASAP
 (defrule
-(building-type-count-total barracks < 2)
+(building-type-count-total barracks < 1)
 (can-build barracks)
 =>
 (build barracks)
@@ -687,6 +751,12 @@
 =>
 (train militiaman-line))
 
+(defrule
+(goal goal-dark-rush-forward-build gv-drbf-built)
+(can-train militiaman-line)
+=>
+(train militiaman-line))
+
 ; -------------------------------------
 
 (defrule
@@ -865,6 +935,5 @@
 =>
 (up-modify-sn sn-maximum-town-size c:+ 20)
 (disable-self))
-
 
 ; -----------------------------------------------------------------------------
