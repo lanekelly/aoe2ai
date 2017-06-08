@@ -1,5 +1,5 @@
-; Firestarter 
-; Stevenson's Bane 
+; Firestarter
+; Stevenson's Bane
 
 ; Based heavily on scripts by BearTheGreat and Promiskuitiv
 
@@ -95,6 +95,7 @@
 (set-strategic-number sn-cap-civilian-builders 4)
 ; high value => siege vs buildings, soldier vs soldier
 (set-strategic-number sn-target-evaluation-siege-weapon 500)
+(set-strategic-number sn-wall-targeting-mode 1)
 (disable-self))
 
 (defrule
@@ -856,8 +857,9 @@
 (chat-local-to-self "Press further!"))
 
 (defrule
-(or (military-population < 20)
-    (town-under-attack))
+;(or (military-population < 20)
+;    (town-under-attack)) ;; this resets the TSA too early
+(military-population < 20)
 (goal goal-army-status gv-army-status-attacking)
 =>
 (up-retreat-now)
