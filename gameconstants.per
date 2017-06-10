@@ -1,12 +1,6 @@
 ; This file contains all evaluations that can be done at the beginning of the game.
 ; Only evalated once since they won't change.
 
-; For now, these constants are not defined in the main file, just here.
-; Time will tell if this is too messy or not.
-
-; Only two options allowed per "or" function. Would be nice to have a preprocessor
-; to allow arbitrary numbers and transform to nested.
-
 ; Some races have spotty support in built-in values and need to manage differently.
 
 #load-if-defined INCAN-CIV
@@ -14,14 +8,12 @@
 (true)
 =>
 (set-goal gc-is-incas gv-yes)
-(chat-local-to-self "I am Incas.")
 (disable-self))
 #else
 (defrule
 (true)
 =>
 (set-goal gc-is-incas gv-no)
-(chat-local-to-self "I am not Incas.")
 (disable-self))
 #end-if
 
@@ -30,14 +22,12 @@
 (true)
 =>
 (set-goal gc-is-indians gv-yes)
-(chat-local-to-self "I am Indians.")
 (disable-self))
 #else
 (defrule
 (true)
 =>
 (set-goal gc-is-indians gv-no)
-(chat-local-to-self "I am not Indians.")
 (disable-self))
 #end-if
 
