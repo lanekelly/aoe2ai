@@ -1,7 +1,7 @@
 ; Firestarter
 ; Stevenson's Bane
 
-; Based heavily on scripts by BearTheGreat and Promiskuitiv
+; Based heavily on scripts by BearTheGreat, Promiskuitiv, and Resonance22
 
 ; Conditions to remember:
 ; High starting resources
@@ -47,6 +47,17 @@
 (defconst goal-tsa 8)
 (defconst goal-ri-queued-blacksmith 9)
 (defconst goal-dark-rush-forward-build 10)
+(defconst goal-ri-queued-university 11)
+
+; These are evaluated only once, in game-constants.per
+
+(defconst gc-is-incas 80)
+(defconst gc-is-indians 81)
+
+(defconst gc-civ-has-knights 100)
+(defconst gc-civ-has-bombard-cannons 101)
+
+; ; ; ; ; ; ; ; ; ; ;
 
 (defconst start-dark-rush-militia-count 5)
 (defconst end-dark-rush-militia-count 15)
@@ -82,6 +93,8 @@
 (set-goal goal-ri-queued-blacksmith gv-no)
 (set-goal goal-dark-rush-forward-build gv-drbf-not-started)
 (disable-self))
+
+(load "gameconstants")
 
 ; -----------------------------------------------------------------------------
 
@@ -389,15 +402,18 @@
 
 ; reset every rule pass
 (defrule
-(goal goal-ri-queued-blacksmith gv-yes)
+(true)
 =>
-(set-goal goal-ri-queued-blacksmith gv-no))
+(set-goal goal-ri-queued-blacksmith gv-no)
+(set-goal goal-ri-queued-university gv-no))
 
 (defrule
 (current-age == imperial-age)
 (can-research ri-murder-holes)
+(goal goal-ri-queued-university gv-no)
 =>
 (research ri-murder-holes)
+(set-goal goal-ri-queued-university gv-yes)
 (chat-local-to-self "Researching murder holes."))
 
 (defrule
@@ -495,6 +511,15 @@
 (research ri-plate-mail)
 (set-goal goal-ri-queued-blacksmith gv-yes)
 (chat-local-to-self "Researching plate mail."))
+
+(defrule
+(current-age == imperial-age)
+(can-research ri-chemistry)
+(goal goal-ri-queued-university gv-no)
+=>
+(research ri-chemistry)
+(set-goal goal-ri-queued-university gv-yes)
+(chat-local-to-self "Researching chemistry."))
 
 ; -----------------------------------------------------------------------------
 
@@ -665,11 +690,32 @@
 
 (defrule
 (goal goal-flood-spearmen gv-yes)
+(current-age == imperial-age)
 (building-type-count-total barracks < 10)
 (can-build barracks)
 =>
 (build barracks)
 (chat-local-to-self "Barracks rule 2"))
+
+(defrule
+(goal goal-flood-spearmen gv-yes)
+(current-age == castle-age)
+(building-type-count-total barracks < 4)
+(can-build barracks)
+=>
+(build barracks)
+(chat-local-to-self "Barracks rule 3"))
+
+; New
+; May need to balance creation order btwn these and barracks
+(defrule
+(goal gc-civ-has-knights gv-yes)
+(current-age == imperial-age)
+(building-type-count-total stable < 3)
+(can-build stable)
+=>
+(build stable)
+(chat-local-to-self "Build stable rule 1"))
 
 (defrule
 (current-age == imperial-age)
@@ -793,10 +839,26 @@
 
 (defrule
 (goal goal-army-composition gv-army-comp-offensive)
+(goal gc-civ-has-bombard-cannons gv-no)
+; What if we're out of gold?
 (unit-type-count-total battering-ram-line < 10)
 (can-train battering-ram-line)
 =>
 (train battering-ram-line))
+
+(defrule
+(or (goal goal-army-composition gv-army-comp-offensive)
+    (civilian-population > 100))
+(can-train knight-line)
+=>
+(train knight-line))
+
+(defrule
+(or (goal goal-army-composition gv-army-comp-offensive)
+    (civilian-population > 125))
+(can-train bombard-cannon)
+=>
+(train bombard-cannon))
 
 ; -----------------------------------------------------------------------------
 
@@ -826,7 +888,8 @@
 (defrule
 (current-age == imperial-age)
 (unit-type-count-total spearman-line > 50)
-(unit-type-count-total battering-ram-line > 3)
+(or (unit-type-count-total battering-ram-line > 3)
+    (unit-type-count-total bombard-cannon > 1))
 (goal goal-army-status gv-army-status-idle)
 =>
 (set-goal goal-army-status gv-army-status-attacking)
