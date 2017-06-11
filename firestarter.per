@@ -398,6 +398,42 @@
 (research ri-wheel-barrow)
 (chat-local-to-self "Researching wheel barrow."))
 
+(defrule
+(can-research ri-cartography)
+=>
+(research ri-cartography)
+(chat-local-to-self "Researching cartography."))
+
+; ----- Castle Age --------------------
+
+(defrule
+(current-age > feudal-age)
+(can-research ri-double-bit-axe)
+=>
+(research ri-double-bit-axe)
+(chat-local-to-self "Researching double bit axe."))
+
+(defrule
+(current-age > feudal-age)
+(can-research ri-bow-saw)
+=>
+(research ri-bow-saw)
+(chat-local-to-self "Researching bow saw."))
+
+(defrule
+(current-age > feudal-age)
+(can-research ri-horse-collar)
+=>
+(research ri-horse-collar)
+(chat-local-to-self "Researching horse collar."))
+
+(defrule
+(current-age > feudal-age)
+(can-research ri-heavy-plow)
+=>
+(research ri-heavy-plow)
+(chat-local-to-self "Researching heavy plow."))
+
 ; ----- Imperial Age ------------------
 
 ; reset every rule pass
@@ -520,6 +556,120 @@
 (research ri-chemistry)
 (set-goal goal-ri-queued-university gv-yes)
 (chat-local-to-self "Researching chemistry."))
+
+(defrule
+(current-age == imperial-age)
+(can-research ri-caravan)
+=>
+(research ri-caravan)
+(chat-local-to-self "Researching caravan."))
+
+(defrule
+(current-age == imperial-age)
+(goal gc-civ-has-knights gv-yes)
+(can-research ri-chain-barding)
+(goal goal-ri-queued-blacksmith gv-no)
+=>
+(research ri-chain-barding)
+(set-goal goal-ri-queued-blacksmith gv-yes)
+(chat-local-to-self "Researching chain barding."))
+
+(defrule
+(current-age == imperial-age)
+(goal gc-civ-has-knights gv-yes)
+(can-research ri-scale-barding)
+(goal goal-ri-queued-blacksmith gv-no)
+=>
+(research ri-scale-barding)
+(set-goal goal-ri-queued-blacksmith gv-yes)
+(chat-local-to-self "Researching scale barding."))
+
+(defrule
+(current-age == imperial-age)
+(goal gc-civ-has-knights gv-yes)
+(can-research ri-plate-barding)
+(goal goal-ri-queued-blacksmith gv-no)
+=>
+(research ri-plate-barding)
+(set-goal goal-ri-queued-blacksmith gv-yes)
+(chat-local-to-self "Researching plate barding."))
+
+(defrule
+(current-age == imperial-age)
+(goal gc-civ-has-knights gv-yes)
+(can-research ri-bloodlines)
+(goal goal-ri-queued-blacksmith gv-no)
+=>
+(research ri-bloodlines)
+(set-goal goal-ri-queued-blacksmith gv-yes)
+(chat-local-to-self "Researching bloodlines."))
+
+(defrule
+(current-age == imperial-age)
+(goal gc-civ-has-knights gv-yes)
+(can-research ri-cavalier)
+(goal goal-ri-queued-blacksmith gv-no)
+=>
+(research ri-cavalier)
+(set-goal goal-ri-queued-blacksmith gv-yes)
+(chat-local-to-self "Researching cavalier."))
+
+(defrule
+(current-age == imperial-age)
+(goal gc-civ-has-knights gv-yes)
+(can-research ri-paladin)
+(goal goal-ri-queued-blacksmith gv-no)
+=>
+(research ri-paladin)
+(set-goal goal-ri-queued-blacksmith gv-yes)
+(chat-local-to-self "Researching paladin."))
+
+(defrule
+(current-age == imperial-age)
+(goal gc-civ-has-knights gv-yes)
+(can-research ri-husbandry)
+(goal goal-ri-queued-blacksmith gv-no)
+=>
+(research ri-husbandry)
+(set-goal goal-ri-queued-blacksmith gv-yes)
+(chat-local-to-self "Researching husbandry."))
+
+(defrule
+(current-age == imperial-age)
+(can-research ri-hand-cart)
+=>
+(research ri-hand-cart)
+(chat-local-to-self "Researching hand-cart."))
+
+(defrule
+(current-age == imperial-age)
+(can-research ri-town-patrol)
+=>
+(research ri-town-patrol)
+(chat-local-to-self "Researching town-patrol."))
+
+(defrule
+(current-age == imperial-age)
+(can-research ri-town-watch)
+=>
+(research ri-town-watch)
+(chat-local-to-self "Researching town-watch."))
+
+(defrule
+(current-age == imperial-age)
+(goal gc-civ-has-bombard-cannons gv-no)
+(can-research ri-capped-ram)
+=>
+(research ri-capped-ram)
+(chat-local-to-self "Researching capped ram."))
+
+(defrule
+(current-age == imperial-age)
+(goal gc-civ-has-bombard-cannons gv-no)
+(can-research ri-siege-ram)
+=>
+(research ri-siege-ram)
+(chat-local-to-self "Researching siege ram."))
 
 ; -----------------------------------------------------------------------------
 
@@ -779,7 +929,7 @@
 ; constantly train villagers
 (defrule
 (not (current-age == dark-age))
-(civilian-population < 200)
+(unit-type-count-total villager < 200)
 (can-train villager)
 =>
 (train villager))
@@ -832,6 +982,7 @@
 
 (defrule
 (goal goal-flood-spearmen gv-yes)
+(unit-type-count-total spearman-line < 150) ; crude throttle, need a priority system
 (can-train spearman-line)
 =>
 (train spearman-line))
@@ -858,6 +1009,15 @@
 (can-train bombard-cannon)
 =>
 (train bombard-cannon))
+
+(defrule
+(current-age == imperial-age)
+(player-in-game any-ally)
+(cc-players-building-type-count any-ally market > 0)
+(unit-type-count-total trade-cart < 30)
+(can-train trade-cart)
+=>
+(train trade-cart))
 
 ; -----------------------------------------------------------------------------
 
@@ -886,9 +1046,7 @@
 
 (defrule
 (current-age == imperial-age)
-(unit-type-count-total spearman-line > 50)
-(or (unit-type-count-total battering-ram-line > 3)
-    (unit-type-count-total bombard-cannon > 1))
+(military-population > 75)
 (goal goal-army-status gv-army-status-idle)
 =>
 (set-goal goal-army-status gv-army-status-attacking)
@@ -1003,5 +1161,23 @@
 =>
 (up-modify-sn sn-maximum-town-size c:+ 20)
 (disable-self))
+
+; -----------------------------------------------------------------------------
+
+; ----- Market rules ----------------------------------------------------------
+
+(defrule
+(current-age == imperial-age)
+(wood-amount > 8000)
+=>
+(sell-commodity wood)
+(chat-local-to-self "selling excess wood"))
+
+(defrule
+(current-age == imperial-age)
+(food-amount > 8000)
+=>
+(sell-commodity food)
+(chat-local-to-self "selling excess food"))
 
 ; -----------------------------------------------------------------------------
