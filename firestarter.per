@@ -158,7 +158,7 @@
 (unit-type-count-total villager >= 10)
 =>
 (set-strategic-number sn-minimum-number-hunters 5)
-(up-chat-data-to-self "Go slay the boar!" c: 0)
+(up-chat-data-to-self "Number of villagers >= 10. Go slay the boar!" c: 0)
 (disable-self))
 
 (defrule
@@ -182,7 +182,7 @@
 =>
 (set-strategic-number sn-total-number-explorers 1)
 (set-strategic-number sn-number-explore-groups 1)
-(up-chat-data-to-self "Dropping extra explorers" c: 0)
+(up-chat-data-to-self "Found an enemy building. Dropping extra explorers" c: 0)
 (disable-self))
 
 ; ----- Castle, Imperial --------------
@@ -197,7 +197,7 @@
 (current-age == castle-age)
 =>
 (set-strategic-number sn-maximum-town-size 30)
-(up-chat-data-to-self "Expand the borders!" c: 0)
+(up-chat-data-to-self "Now in Castle Age. Expand town size to 30." c: 0)
 (disable-self))
 
 ; -----------------------------------------------------------------------------
@@ -364,7 +364,7 @@
 (goal goal-dark-rush-forward-build gv-drbf-finished)
 =>
 (set-goal goal-dark-rush gv-dr-finished)
-(up-chat-data-to-self "Finished rushing 1." c: 0))
+(up-chat-data-to-self "Finished rushing since forward barracks was destroyed." c: 0))
 
 (defrule
 (goal goal-dark-rush gv-dr-rushing)
@@ -372,7 +372,7 @@
 =>
 (set-goal goal-dark-rush gv-dr-finished)
 (set-goal goal-dark-rush-forward-build gv-drbf-finished)
-(up-chat-data-to-self "Finished rushing 2." c: 0))
+(up-chat-data-to-self "Finished rushing since game time has passed 12 minutes." c: 0))
 
 (defrule
 (goal goal-dark-rush gv-dr-finished)
@@ -689,7 +689,7 @@
 (up-pending-objects c: house < 1) ; this rule will queue otherwise
 =>
 (build house)
-(up-chat-data-to-self "House rule 1" c: 0))
+(up-chat-data-to-self "Building house since headroom < 7" c: 0))
 
 (defrule
 (goal goal-dark-rush gv-dr-finished)
@@ -699,7 +699,7 @@
 (up-pending-objects c: house < 1)
 =>
 (build house)
-(up-chat-data-to-self "House rule 2" c: 0))
+(up-chat-data-to-self "Building house since headroom < 4" c: 0))
 
 ; ASAP
 (defrule
@@ -707,7 +707,7 @@
 (can-build barracks)
 =>
 (build barracks)
-(up-chat-data-to-self "Barracks rule 1" c: 0))
+(up-chat-data-to-self "Building a barracks ASAP" c: 0))
 
 (defrule
 (building-type-count-total house > 0)
@@ -734,7 +734,7 @@
 (up-pending-objects c: farm < 1)
 =>
 (build farm)
-(up-chat-data-to-self "Farm rule 1" c: 0))
+(up-chat-data-to-self "Building a farm now that rush is over" c: 0))
 
 (defrule
 (current-age > dark-age)
@@ -743,14 +743,14 @@
 (can-build farm)
 =>
 (build farm)
-(up-chat-data-to-self "Farm rule 2" c: 0))
+(up-chat-data-to-self "Building a farm to satisfy food gatherer %" c: 0))
 
 (defrule
 (building-type-count-total lumber-camp > 0)
 (strategic-number sn-camp-max-distance < 35)
 =>
 (set-strategic-number sn-camp-max-distance 35)
-(up-chat-data-to-self "Camp distance 35." c: 0)
+(up-chat-data-to-self "First lumber camp built/placed, increasing camp distance to 35." c: 0)
 (disable-self))
 
 (defrule
@@ -758,13 +758,14 @@
     (goal goal-age-status gv-advancing-to-feudal))
 (resource-found gold)
 (building-type-count mining-camp < 4)
-(cc-players-unit-type-count 0 66 > 0)
+(cc-players-unit-type-count 0 66 > 0) ; gold exists on the map
 (dropsite-min-distance gold > 5)
 (dropsite-min-distance gold < 255)
 (up-pending-objects c: mining-camp < 1)
 (can-build mining-camp)
 =>
-(build mining-camp))
+(build mining-camp)
+(up-chat-data-to-self "Building a mining camp for gold." c: 0))
 
 ; ----- Feudal ------------------------
 
@@ -793,7 +794,8 @@
 (can-build mining-camp)
 (up-pending-objects c: mining-camp < 1)
 =>
-(build mining-camp))
+(build mining-camp)
+(up-chat-data-to-self "Building a mining camp for stone." c: 0))
 
 ; ----- Castle ------------------------
 
@@ -803,14 +805,14 @@
 (building-type-count-total castle < 2)
 =>
 (build castle)
-(up-chat-data-to-self "Castle rule 1" c: 0))
+(up-chat-data-to-self "Building a castle since there are 3+ town centers" c: 0))
 
 (defrule
 (building-type-count-total town-center < 6)
 (can-build town-center)
 =>
 (build town-center)
-(up-chat-data-to-self "Town center rule 1" c: 0))
+(up-chat-data-to-self "Building a town center since count < 6." c: 0))
 
 (defrule
 (or (current-age == castle-age)
@@ -822,7 +824,7 @@
 (up-pending-objects c: house < 2)
 =>
 (build house)
-(up-chat-data-to-self "House rule 3" c: 0))
+(up-chat-data-to-self "Building a house since headroom < 20." c: 0))
 
 (defrule
 (civilian-population > 100)
@@ -831,7 +833,7 @@
 (can-build farm)
 =>
 (build farm)
-(up-chat-data-to-self "Farm rule 3" c: 0))
+(up-chat-data-to-self "Building at least 60 farms." c: 0))
 
 ; ----- Imperial ----------------------
 
@@ -841,7 +843,7 @@
 (can-build university)
 =>
 (build university)
-(up-chat-data-to-self "University rule 1" c: 0))
+(up-chat-data-to-self "Building a university." c: 0))
 
 (defrule
 (goal goal-flood-spearmen gv-yes)
@@ -850,7 +852,7 @@
 (can-build barracks)
 =>
 (build barracks)
-(up-chat-data-to-self "Barracks rule 2" c: 0))
+(up-chat-data-to-self "Need to flood spearmen. Building a barracks since count < 10" c: 0))
 
 (defrule
 (goal goal-flood-spearmen gv-yes)
@@ -859,7 +861,7 @@
 (can-build barracks)
 =>
 (build barracks)
-(up-chat-data-to-self "Barracks rule 3" c: 0))
+(up-chat-data-to-self "Need to flood spearmen. Building a barracks since count < 4" c: 0))
 
 ; May need to balance creation order btwn these and barracks
 (defrule
@@ -869,7 +871,7 @@
 (can-build stable)
 =>
 (build stable)
-(up-chat-data-to-self "Build stable rule 1" c: 0))
+(up-chat-data-to-self "Building a stable since count < 3" c: 0))
 
 (defrule
 (current-age == imperial-age)
@@ -877,7 +879,7 @@
 (can-build siege-workshop)
 =>
 (build siege-workshop)
-(up-chat-data-to-self "Siege workshop rule 1" c: 0))
+(up-chat-data-to-self "Building a siege workshop since count < 2" c: 0))
 
 ; [OFF] currently broken
 ;(defrule
@@ -894,7 +896,7 @@
 =>
 (set-strategic-number sn-camp-max-distance 360)
 (disable-self)
-(up-chat-data-to-self "Camp distance: 360" c: 0))
+(up-chat-data-to-self "Now in Imperial Age, setting camp distance to 360" c: 0))
 
 (defrule
 (building-type-count farm > 15)
@@ -902,7 +904,7 @@
 (can-build mill)
 =>
 (build mill)
-(up-chat-data-to-self "Mill rule 2" c: 0))
+(up-chat-data-to-self "Building a mill since count < 2 and farms count > 15" c: 0))
 
 (defrule
 (building-type-count farm > 25)
@@ -910,7 +912,7 @@
 (can-build mill)
 =>
 (build mill)
-(up-chat-data-to-self "Mill rule 3" c: 0))
+(up-chat-data-to-self "Building a mill since count < 3 and farms count > 25" c: 0))
 
 (defrule
 (building-type-count farm > 30)
@@ -918,7 +920,7 @@
 (can-build mill)
 =>
 (build mill)
-(up-chat-data-to-self "Mill rule 4" c: 0))
+(up-chat-data-to-self "Building a mill since count < 4 and farms count > 30" c: 0))
 
 ; -----------------------------------------------------------------------------
 
@@ -971,19 +973,20 @@
 (goal goal-army-status gv-army-status-idle)
 =>
 (set-goal goal-army-composition gv-army-comp-offensive)
-(up-chat-data-to-self "Building an attack force" c: 0))
+(up-chat-data-to-self "Building an attack force since civilian pop > 80 and army is idle." c: 0))
 
 (defrule
 (goal goal-army-composition gv-army-comp-offensive)
 (goal goal-army-status gv-army-status-defending)
 =>
 (set-goal goal-army-composition gv-army-comp-defensive)
-(up-chat-data-to-self "Reverting to defensive focus" c: 0))
+(up-chat-data-to-self "Reverting to defensive army composition" c: 0))
 
 (defrule
 (goal goal-army-composition gv-army-comp-offensive)
 =>
-(set-goal goal-flood-spearmen gv-yes))
+(set-goal goal-flood-spearmen gv-yes)
+(up-chat-data-to-self "Using the flood-spearmen strategy." c: 0))
 
 (defrule
 (goal goal-flood-spearmen gv-yes)
@@ -1057,7 +1060,7 @@
 (set-goal goal-army-status gv-army-status-attacking)
 (set-goal goal-tsa gv-yes)
 (set-strategic-number sn-enemy-sighted-response-distance 2)
-(up-chat-data-to-self "Begin the siege!" c: 0))
+(up-chat-data-to-self "Military pop > 75 and army is idle. Begin the siege!" c: 0))
 
 (defrule
 (goal goal-tsa gv-yes)
