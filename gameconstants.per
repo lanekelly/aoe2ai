@@ -7,13 +7,13 @@
 (defrule
 (true)
 =>
-(set-goal gc-is-incas gv-yes)
+(set-goal gc-is-incas c-yes)
 (disable-self))
 #else
 (defrule
 (true)
 =>
-(set-goal gc-is-incas gv-no)
+(set-goal gc-is-incas c-no)
 (disable-self))
 #end-if
 
@@ -21,31 +21,153 @@
 (defrule
 (true)
 =>
-(set-goal gc-is-indians gv-yes)
+(set-goal gc-is-indians c-yes)
 (disable-self))
 #else
 (defrule
 (true)
 =>
-(set-goal gc-is-indians gv-no)
+(set-goal gc-is-indians c-no)
 (disable-self))
 #end-if
+
+#load-if-defined POPULATION-CAP-25
+(defconst c-villager-cap 12)
+(defconst c-trade-cart-cap 1)
+(defconst c-civilian-cap 13)
+(defconst c-military-cap 12)
+(defrule (true) =>
+(set-goal gc-pop-max 25)
+(disable-self))
+#end-if
+
+#load-if-defined POPULATION-CAP-50
+(defconst c-villager-cap 22)
+(defconst c-trade-cart-cap 3)
+(defconst c-civilian-cap 25)
+(defconst c-military-cap 25)
+(defrule (true) =>
+(set-goal gc-pop-max 50)
+(disable-self))
+#end-if
+
+#load-if-defined POPULATION-CAP-75
+(defconst c-villager-cap 35)
+(defconst c-trade-cart-cap 5)
+(defconst c-civilian-cap 40)
+(defconst c-military-cap 35)
+(defrule (true) =>
+(set-goal gc-pop-max 75)
+(disable-self))
+#end-if
+
+#load-if-defined POPULATION-CAP-100
+(defconst c-villager-cap 45)
+(defconst c-trade-cart-cap 5)
+(defconst c-civilian-cap 50)
+(defconst c-military-cap 50)
+(defrule (true) =>
+(set-goal gc-pop-max 100)
+(disable-self))
+#end-if
+
+#load-if-defined POPULATION-CAP-125
+(defconst c-villager-cap 62)
+(defconst c-trade-cart-cap 8)
+(defconst c-civilian-cap 70)
+(defconst c-military-cap 55)
+(defrule (true) =>
+(set-goal gc-pop-max 125)
+(disable-self))
+#end-if
+
+#load-if-defined POPULATION-CAP-150
+(defconst c-villager-cap 67)
+(defconst c-trade-cart-cap 8)
+(defconst c-civilian-cap 75)
+(defconst c-military-cap 75)
+(defrule (true) =>
+(set-goal gc-pop-max 150)
+(disable-self))
+#end-if
+
+#load-if-defined POPULATION-CAP-175
+(defconst c-villager-cap 75)
+(defconst c-trade-cart-cap 10)
+(defconst c-civilian-cap 85)
+(defconst c-military-cap 90)
+(defrule (true) =>
+(set-goal gc-pop-max 175)
+(disable-self))
+#end-if
+
+#load-if-defined POPULATION-CAP-200
+(defconst c-villager-cap 90)
+(defconst c-trade-cart-cap 10)
+(defconst c-civilian-cap 100)
+(defconst c-military-cap 100)
+(defrule (true) =>
+(set-goal gc-pop-max 200)
+(disable-self))
+#end-if
+
+#load-if-defined POPULATION-CAP-EXTENDED
+#load-if-defined POPULATION-CAP-250
+(defconst c-villager-cap 110)
+(defconst c-trade-cart-cap 15)
+(defconst c-civilian-cap 125)
+(defconst c-military-cap 125)
+(defrule (true) =>
+(set-goal gc-pop-max 250)
+(disable-self))
+#end-if
+
+#load-if-defined POPULATION-CAP-300
+(defconst c-villager-cap 135)
+(defconst c-trade-cart-cap 15)
+(defconst c-civilian-cap 150)
+(defconst c-military-cap 150)
+(defrule (true) =>
+(set-goal gc-pop-max 300)
+(disable-self))
+#end-if
+
+#load-if-defined POPULATION-CAP-400
+(defconst c-villager-cap 155)
+(defconst c-trade-cart-cap 20)
+(defconst c-civilian-cap 175)
+(defconst c-military-cap 225)
+(defrule (true) =>
+(set-goal gc-pop-max 400)
+(disable-self))
+#end-if
+
+#load-if-defined POPULATION-CAP-500
+(defconst c-villager-cap 180)
+(defconst c-trade-cart-cap 20)
+(defconst c-civilian-cap 200)
+(defconst c-military-cap 300)
+(defrule (true) =>
+(set-goal gc-pop-max 500)
+(disable-self))
+#end-if
+#end-if ; POPULATION-CAP-EXTENDED
 
 (defrule
 (or
     (or (civ-selected aztec)
-        (goal gc-is-incas gv-yes))
-    (or (goal gc-is-indians gv-yes)
+        (goal gc-is-incas c-yes))
+    (or (goal gc-is-indians c-yes)
         (civ-selected mayan)))
 =>
-(set-goal gc-civ-has-knights gv-no)
+(set-goal gc-civ-has-knights c-no)
 (chat-local-to-self "Fact: Civ can NOT build knights.")
 (disable-self))
 
 (defrule
-(not (goal gc-civ-has-knights gv-no))
+(not (goal gc-civ-has-knights c-no))
 =>
-(set-goal gc-civ-has-knights gv-yes)
+(set-goal gc-civ-has-knights c-yes)
 (chat-local-to-self "Fact: Civ can build knights.")
 (disable-self))
 
@@ -58,7 +180,7 @@
             (or (civ-selected celtic)
                 (civ-selected chinese)))
         (or (or (civ-selected hun)
-                (goal gc-is-incas gv-yes))
+                (goal gc-is-incas c-yes))
             (or (civ-selected japanese)
                 (civ-selected magyar))))
     (or (or (or (civ-selected mayan)
@@ -67,13 +189,23 @@
                 (civ-selected viking)))
         (false)))
 =>
-(set-goal gc-civ-has-bombard-cannons gv-no)
+(set-goal gc-civ-has-bombard-cannons c-no)
 (chat-local-to-self "Fact: Civ can NOT build bombard cannons.")
 (disable-self))
 
 (defrule
-(not (goal gc-civ-has-bombard-cannons gv-no))
+(not (goal gc-civ-has-bombard-cannons c-no))
 =>
-(set-goal gc-civ-has-bombard-cannons gv-yes)
+(set-goal gc-civ-has-bombard-cannons c-yes)
 (chat-local-to-self "Fact: Civ can build bombard cannons.")
+(disable-self))
+
+(defrule
+(true)
+=>
+(up-chat-data-to-self "Villager cap: %d" c: c-villager-cap)
+(up-chat-data-to-self "Tradecart cap: %d" c: c-trade-cart-cap)
+(up-chat-data-to-self "Civilian cap: %d" c: c-civilian-cap)
+(up-chat-data-to-self "Military cap: %d" c: c-military-cap)
+(up-chat-data-to-self "Population cap: %d" g: gc-pop-max)
 (disable-self))

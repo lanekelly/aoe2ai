@@ -1,0 +1,20 @@
+;
+;
+;
+
+; set per-loop initialization states
+(defrule
+(true)
+=>
+(set-goal gv-has-space-villager c-no))
+;(up-get-fact military-population 0 gv-military-pop)
+;(up-get-fact unit-type-count-total spearman-line gv-spearman-line-pop))
+
+; Civilians = villagers + trade carts
+(defrule
+(or (and (not (player-in-game any-ally))
+         (unit-type-count-total villager < c-civilian-cap))
+    (and (player-in-game any-ally)
+         (unit-type-count-total villager < c-villager-cap)))
+=>
+(set-goal gv-has-space-villager c-yes))

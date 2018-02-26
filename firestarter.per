@@ -8,10 +8,13 @@
 ; High population limit (500)
 ; Should build villagers and militia in parallel and attack!
 
+; COMPLETION CRITERIA FOR THIS BRANCH
+; - No hardcoded unit numbers -- only deal in percentages.
+;
 ; ----- Constants -------------------------------------------------------------
 
-(defconst gv-yes 1)
-(defconst gv-no 0)
+(defconst c-yes 1)
+(defconst c-no 0)
 
 (defconst gv-dark-age 0)
 (defconst gv-advancing-to-feudal 1)
@@ -51,13 +54,25 @@
 
 ; These are evaluated only once, in game-constants.per
 
+; Defined in game-constants.per
+; c-villager-cap
+; c-trade-cart-cap
+; c-civilian-cap
+; c-military-cap
+
 (defconst gc-is-incas 80)
 (defconst gc-is-indians 81)
 
 (defconst gc-civ-has-knights 100)
 (defconst gc-civ-has-bombard-cannons 101)
 
+(defconst gc-pop-max 102)
+
 ; ; ; ; ; ; ; ; ; ; ;
+; These are evaluated each loop, in gamevariables.per
+
+(defconst gv-has-space-villager 300)
+; ; ; ; ; ; ;
 
 (defconst start-dark-rush-militia-count 5)
 (defconst end-dark-rush-militia-count 15)
@@ -84,17 +99,19 @@
 (true)
 =>
 (set-goal goal-dark-rush gv-dr-building)
-(set-goal goal-max-militia-reached gv-no)
+(set-goal goal-max-militia-reached c-no)
 (set-goal goal-age-status gv-dark-age)
-(set-goal goal-flood-spearmen gv-no)
+(set-goal goal-flood-spearmen c-no)
 (set-goal goal-army-status gv-army-status-idle)
 (set-goal goal-army-composition gv-army-comp-defensive)
-(set-goal goal-tsa gv-no)
-(set-goal goal-ri-queued-blacksmith gv-no)
+(set-goal goal-tsa c-no)
+(set-goal goal-ri-queued-blacksmith c-no)
 (set-goal goal-dark-rush-forward-build gv-drbf-not-started)
 (disable-self))
 
 (load "gameconstants")
+
+(load "gamevariables")
 
 ; -----------------------------------------------------------------------------
 
@@ -325,6 +342,7 @@
 =>
 (build-forward barracks))
 
+; TODO - get this working!
 (defrule
 (goal goal-dark-rush-forward-build gv-drbf-building)
 (can-build town-center)
@@ -440,34 +458,34 @@
 (defrule
 (true)
 =>
-(set-goal goal-ri-queued-blacksmith gv-no)
-(set-goal goal-ri-queued-university gv-no))
+(set-goal goal-ri-queued-blacksmith c-no)
+(set-goal goal-ri-queued-university c-no))
 
 (defrule
 (current-age == imperial-age)
 (can-research ri-murder-holes)
-(goal goal-ri-queued-university gv-no)
+(goal goal-ri-queued-university c-no)
 =>
 (research ri-murder-holes)
-(set-goal goal-ri-queued-university gv-yes)
+(set-goal goal-ri-queued-university c-yes)
 (chat-local-to-self "Researching murder holes."))
 
 (defrule
 (current-age == imperial-age)
 (can-research ri-scale-mail)
-(goal goal-ri-queued-blacksmith gv-no)
+(goal goal-ri-queued-blacksmith c-no)
 =>
 (research ri-scale-mail)
-(set-goal goal-ri-queued-blacksmith gv-yes)
+(set-goal goal-ri-queued-blacksmith c-yes)
 (chat-local-to-self "Researching scale mail armor."))
 
 (defrule
 (current-age == imperial-age)
 (can-research ri-forging)
-(goal goal-ri-queued-blacksmith gv-no)
+(goal goal-ri-queued-blacksmith c-no)
 =>
 (research ri-forging)
-(set-goal goal-ri-queued-blacksmith gv-yes)
+(set-goal goal-ri-queued-blacksmith c-yes)
 (chat-local-to-self "Researching forging."))
 
 (defrule
@@ -480,19 +498,19 @@
 (defrule
 (current-age == imperial-age)
 (can-research ri-chain-mail)
-(goal goal-ri-queued-blacksmith gv-no)
+(goal goal-ri-queued-blacksmith c-no)
 =>
 (research ri-chain-mail)
-(set-goal goal-ri-queued-blacksmith gv-yes)
+(set-goal goal-ri-queued-blacksmith c-yes)
 (chat-local-to-self "Researching chain mail armor."))
 
 (defrule
 (current-age == imperial-age)
 (can-research ri-iron-casting)
-(goal goal-ri-queued-blacksmith gv-no)
+(goal goal-ri-queued-blacksmith c-no)
 =>
 (research ri-iron-casting)
-(set-goal goal-ri-queued-blacksmith gv-yes)
+(set-goal goal-ri-queued-blacksmith c-yes)
 (chat-local-to-self "Researching iron casting."))
 
 (defrule
@@ -533,28 +551,28 @@
 (defrule
 (current-age == imperial-age)
 (can-research ri-blast-furnace)
-(goal goal-ri-queued-blacksmith gv-no)
+(goal goal-ri-queued-blacksmith c-no)
 =>
 (research ri-blast-furnace)
-(set-goal goal-ri-queued-blacksmith gv-yes)
+(set-goal goal-ri-queued-blacksmith c-yes)
 (chat-local-to-self "Researching blast furnace."))
 
 (defrule
 (current-age == imperial-age)
 (can-research ri-plate-mail)
-(goal goal-ri-queued-blacksmith gv-no)
+(goal goal-ri-queued-blacksmith c-no)
 =>
 (research ri-plate-mail)
-(set-goal goal-ri-queued-blacksmith gv-yes)
+(set-goal goal-ri-queued-blacksmith c-yes)
 (chat-local-to-self "Researching plate mail."))
 
 (defrule
 (current-age == imperial-age)
 (can-research ri-chemistry)
-(goal goal-ri-queued-university gv-no)
+(goal goal-ri-queued-university c-no)
 =>
 (research ri-chemistry)
-(set-goal goal-ri-queued-university gv-yes)
+(set-goal goal-ri-queued-university c-yes)
 (chat-local-to-self "Researching chemistry."))
 
 (defrule
@@ -566,72 +584,72 @@
 
 (defrule
 (current-age == imperial-age)
-(goal gc-civ-has-knights gv-yes)
+(goal gc-civ-has-knights c-yes)
 (can-research ri-chain-barding)
-(goal goal-ri-queued-blacksmith gv-no)
+(goal goal-ri-queued-blacksmith c-no)
 =>
 (research ri-chain-barding)
-(set-goal goal-ri-queued-blacksmith gv-yes)
+(set-goal goal-ri-queued-blacksmith c-yes)
 (chat-local-to-self "Researching chain barding."))
 
 (defrule
 (current-age == imperial-age)
-(goal gc-civ-has-knights gv-yes)
+(goal gc-civ-has-knights c-yes)
 (can-research ri-scale-barding)
-(goal goal-ri-queued-blacksmith gv-no)
+(goal goal-ri-queued-blacksmith c-no)
 =>
 (research ri-scale-barding)
-(set-goal goal-ri-queued-blacksmith gv-yes)
+(set-goal goal-ri-queued-blacksmith c-yes)
 (chat-local-to-self "Researching scale barding."))
 
 (defrule
 (current-age == imperial-age)
-(goal gc-civ-has-knights gv-yes)
+(goal gc-civ-has-knights c-yes)
 (can-research ri-plate-barding)
-(goal goal-ri-queued-blacksmith gv-no)
+(goal goal-ri-queued-blacksmith c-no)
 =>
 (research ri-plate-barding)
-(set-goal goal-ri-queued-blacksmith gv-yes)
+(set-goal goal-ri-queued-blacksmith c-yes)
 (chat-local-to-self "Researching plate barding."))
 
 (defrule
 (current-age == imperial-age)
-(goal gc-civ-has-knights gv-yes)
+(goal gc-civ-has-knights c-yes)
 (can-research ri-bloodlines)
-(goal goal-ri-queued-blacksmith gv-no)
+(goal goal-ri-queued-blacksmith c-no)
 =>
 (research ri-bloodlines)
-(set-goal goal-ri-queued-blacksmith gv-yes)
+(set-goal goal-ri-queued-blacksmith c-yes)
 (chat-local-to-self "Researching bloodlines."))
 
 (defrule
 (current-age == imperial-age)
-(goal gc-civ-has-knights gv-yes)
+(goal gc-civ-has-knights c-yes)
 (can-research ri-cavalier)
-(goal goal-ri-queued-blacksmith gv-no)
+(goal goal-ri-queued-blacksmith c-no)
 =>
 (research ri-cavalier)
-(set-goal goal-ri-queued-blacksmith gv-yes)
+(set-goal goal-ri-queued-blacksmith c-yes)
 (chat-local-to-self "Researching cavalier."))
 
 (defrule
 (current-age == imperial-age)
-(goal gc-civ-has-knights gv-yes)
+(goal gc-civ-has-knights c-yes)
 (can-research ri-paladin)
-(goal goal-ri-queued-blacksmith gv-no)
+(goal goal-ri-queued-blacksmith c-no)
 =>
 (research ri-paladin)
-(set-goal goal-ri-queued-blacksmith gv-yes)
+(set-goal goal-ri-queued-blacksmith c-yes)
 (chat-local-to-self "Researching paladin."))
 
 (defrule
 (current-age == imperial-age)
-(goal gc-civ-has-knights gv-yes)
+(goal gc-civ-has-knights c-yes)
 (can-research ri-husbandry)
-(goal goal-ri-queued-blacksmith gv-no)
+(goal goal-ri-queued-blacksmith c-no)
 =>
 (research ri-husbandry)
-(set-goal goal-ri-queued-blacksmith gv-yes)
+(set-goal goal-ri-queued-blacksmith c-yes)
 (chat-local-to-self "Researching husbandry."))
 
 (defrule
@@ -657,7 +675,7 @@
 
 (defrule
 (current-age == imperial-age)
-(goal gc-civ-has-bombard-cannons gv-no)
+(goal gc-civ-has-bombard-cannons c-no)
 (can-research ri-capped-ram)
 =>
 (research ri-capped-ram)
@@ -665,7 +683,7 @@
 
 (defrule
 (current-age == imperial-age)
-(goal gc-civ-has-bombard-cannons gv-no)
+(goal gc-civ-has-bombard-cannons c-no)
 (can-research ri-siege-ram)
 =>
 (research ri-siege-ram)
@@ -820,7 +838,7 @@
 (chat-local-to-self "House rule 3"))
 
 (defrule
-(civilian-population > 100)
+(civilian-population > 100) ; todo - make a percentage of max civilian pop
 (building-type-count-total town-center >= 3)
 (building-type-count-total farm < 60)
 (can-build farm)
@@ -839,7 +857,7 @@
 (chat-local-to-self "University rule 1"))
 
 (defrule
-(goal goal-flood-spearmen gv-yes)
+(goal goal-flood-spearmen c-yes)
 (current-age == imperial-age)
 (building-type-count-total barracks < 10)
 (can-build barracks)
@@ -848,7 +866,7 @@
 (chat-local-to-self "Barracks rule 2"))
 
 (defrule
-(goal goal-flood-spearmen gv-yes)
+(goal goal-flood-spearmen c-yes)
 (current-age == castle-age)
 (building-type-count-total barracks < 4)
 (can-build barracks)
@@ -858,7 +876,7 @@
 
 ; May need to balance creation order btwn these and barracks
 (defrule
-(goal gc-civ-has-knights gv-yes)
+(goal gc-civ-has-knights c-yes)
 (current-age == imperial-age)
 (building-type-count-total stable < 3)
 (can-build stable)
@@ -921,6 +939,7 @@
 
 (defrule
 (current-age == dark-age)
+(goal gv-has-space-villager c-yes)
 (unit-type-count-total villager < max-num-dark-villagers)
 (can-train villager)
 =>
@@ -929,7 +948,7 @@
 ; constantly train villagers
 (defrule
 (not (current-age == dark-age))
-(unit-type-count-total villager < 200)
+(goal gv-has-space-villager c-yes)
 (can-train villager)
 =>
 (train villager))
@@ -939,21 +958,23 @@
     (goal goal-dark-rush gv-dr-rushing))
 (unit-type-count-total militiaman-line >= end-dark-rush-militia-count)
 =>
-(set-goal goal-max-militia-reached gv-yes)
+(set-goal goal-max-militia-reached c-yes)
 (chat-local-to-self "Done training rush militia.")
 (disable-self))
 
 (defrule
 (or (goal goal-dark-rush gv-dr-building)
     (goal goal-dark-rush gv-dr-rushing))
-(goal goal-max-militia-reached gv-no)
+(goal goal-max-militia-reached c-no)
 (can-train militiaman-line)
+(military-population < c-military-cap)
 =>
 (train militiaman-line))
 
 (defrule
 (goal goal-dark-rush-forward-build gv-drbf-built)
 (can-train militiaman-line)
+(military-population < c-military-cap)
 =>
 (train militiaman-line))
 
@@ -961,7 +982,7 @@
 
 (defrule
 (current-age == imperial-age)
-(civilian-population > 80)
+(civilian-population > 80) ; todo - make a percentage of max civilian pop
 (goal goal-army-composition gv-army-comp-defensive)
 (goal goal-army-status gv-army-status-idle)
 =>
@@ -978,34 +999,38 @@
 (defrule
 (goal goal-army-composition gv-army-comp-offensive)
 =>
-(set-goal goal-flood-spearmen gv-yes))
+(set-goal goal-flood-spearmen c-yes))
 
 (defrule
-(goal goal-flood-spearmen gv-yes)
+(goal goal-flood-spearmen c-yes)
 (unit-type-count-total spearman-line < 150) ; crude throttle, need a priority system
+(military-population < c-military-cap)
 (can-train spearman-line)
 =>
 (train spearman-line))
 
 (defrule
 (goal goal-army-composition gv-army-comp-offensive)
-(goal gc-civ-has-bombard-cannons gv-no)
+(goal gc-civ-has-bombard-cannons c-no)
 ; What if we're out of gold?
 (unit-type-count-total battering-ram-line < 10)
+(military-population < c-military-cap)
 (can-train battering-ram-line)
 =>
 (train battering-ram-line))
 
 (defrule
 (or (goal goal-army-composition gv-army-comp-offensive)
-    (civilian-population > 100))
+    (civilian-population > c-villager-cap))
+(military-population < c-military-cap)
 (can-train knight-line)
 =>
 (train knight-line))
 
 (defrule
 (or (goal goal-army-composition gv-army-comp-offensive)
-    (civilian-population > 125))
+    (civilian-population > c-villager-cap))
+(military-population < c-military-cap)
 (can-train bombard-cannon)
 =>
 (train bombard-cannon))
@@ -1014,7 +1039,7 @@
 (current-age == imperial-age)
 (player-in-game any-ally)
 (cc-players-building-type-count any-ally market > 0)
-(unit-type-count-total trade-cart < 30)
+(unit-type-count-total trade-cart < c-trade-cart-cap)
 (can-train trade-cart)
 =>
 (train trade-cart))
@@ -1050,30 +1075,30 @@
 (goal goal-army-status gv-army-status-idle)
 =>
 (set-goal goal-army-status gv-army-status-attacking)
-(set-goal goal-tsa gv-yes)
+(set-goal goal-tsa c-yes)
 (set-strategic-number sn-enemy-sighted-response-distance 2)
 (chat-local-to-self "Begin the siege!"))
 
 (defrule
-(goal goal-tsa gv-yes)
+(goal goal-tsa c-yes)
 (not(enemy-buildings-in-town))
 =>
 (up-modify-sn sn-maximum-town-size c:+ 2)
 (up-chat-data-to-self "town size: %d" s: sn-maximum-town-size))
 
 (defrule
-(goal goal-tsa gv-yes)
+(goal goal-tsa c-yes)
 (enemy-buildings-in-town)
 =>
-(set-goal goal-tsa gv-no)
+(set-goal goal-tsa c-no)
 (chat-local-to-self "Maxed out TSA. Attack!"))
 
 (defrule
-(goal goal-tsa gv-no)
+(goal goal-tsa c-no)
 (not (enemy-buildings-in-town))
 (goal goal-army-status gv-army-status-attacking)
 =>
-(set-goal goal-tsa gv-yes)
+(set-goal goal-tsa c-yes)
 (chat-local-to-self "Press further!"))
 
 (defrule
@@ -1083,7 +1108,7 @@
 (goal goal-army-status gv-army-status-attacking)
 =>
 (up-retreat-now)
-(set-goal goal-tsa gv-no)
+(set-goal goal-tsa c-no)
 (set-goal goal-army-status gv-army-status-defending)
 (set-strategic-number sn-maximum-town-size 30)
 (chat-local-to-self "Fall back!")
@@ -1098,7 +1123,7 @@
 (not (enemy-buildings-in-town))
 (goal goal-army-status gv-army-status-defending)
 =>
-(set-goal goal-flood-spearmen gv-no)
+(set-goal goal-flood-spearmen c-no)
 (set-goal goal-army-status gv-army-status-idle)
 (set-strategic-number sn-enemy-sighted-response-distance 25)
 (chat-local-to-self "Army is now idle"))
@@ -1110,7 +1135,7 @@
 (goal goal-army-status gv-army-status-idle)
 =>
 (set-goal goal-army-status gv-army-status-defending)
-(set-goal goal-flood-spearmen gv-yes)
+(set-goal goal-flood-spearmen c-yes)
 (set-strategic-number sn-enemy-sighted-response-distance 144)
 (enable-timer generic-defend-timer 30)
 (chat-local-to-self "We're under attack!"))
@@ -1157,7 +1182,7 @@
 
 (defrule
 (current-age == castle-age)
-(civilian-population > 100)
+(civilian-population > 100) ; todo - make a percentage of max civilian pop
 =>
 (up-modify-sn sn-maximum-town-size c:+ 20)
 (disable-self))

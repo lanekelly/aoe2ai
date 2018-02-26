@@ -1,0 +1,5 @@
+; used for testing bodkin transpiler
+
+#bodkin-begin
+(any-civ aztec briton celtic chinese hun inca japanese magyar mayan mongol slavic viking)
+#bodkin-end

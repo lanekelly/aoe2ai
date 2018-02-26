@@ -1,0 +1,52 @@
+;
+;
+; Attack interface & runtime under development
+;
+; Needs to set the following fields each loop
+; - gv-is-comp-obsolete
+; - gv-next-comp-id
+;
+; ID: 1, c-defaultattack-comp-id
+
+; Behavior:
+; Default attack pattern. Never changes into another composition.
+
+; Internal state
+
+(defconst gv-one-spearman-line-cap 500)
+(defconst gv-one-make-offense 501)
+(defconst gv-one-make-defense 502)
+
+(defrule
+(goal gv-current-comp-id c-defaultattack-comp-id)
+=>
+(set-goal gv-one-spearman-line-cap c-m-sixty-percent)
+(set-goal gv-one-make-military c-no)
+(up-chat-data-to-self "Army composition will be spearman line and siege. May buff with knights."
+(disable-self))
+
+(defrule
+(goal gv-current-comp-id c-defaultattack-comp-id) ; this must always be here!
+=>
+(set-goal gv-next-comp-id c-defaultattack-comp-id)
+(set-goal gv-is-comp-obsolete c-no))
+
+(defrule
+(current-age == imperial-age)
+(civilian-population > c-c-fifty-percent)
+;(goal goal-army-composition gv-army-comp-defensive)
+;(goal goal-army-status gv-army-status-idle)
+=>
+; Never going to set this to no. In this comp, always keep the army
+; maxed out after setting to yes.
+(set-goal gv-one-make-offense c-yes))
+
+(defrule
+(goal gv-current-comp-id c-defaultattack-comp-id)
+(up-compare-goal gv-spearman-line-pop g:< gv-one-spearman-line-cap)
+(or (goal gv-one-make-offense c-yes)
+    (goal gv-one-make-defense c-yes))
+(can-train spearman-line)
+=>
+(train spearman-line))
+
