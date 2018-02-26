@@ -39,14 +39,14 @@
         (civ-selected mayan)))
 =>
 (set-goal gc-civ-has-knights gv-no)
-(chat-local-to-self "Fact: Civ can NOT build knights.")
+(up-chat-data-to-self "Fact: Civ can NOT build knights." c: 0)
 (disable-self))
 
 (defrule
 (not (goal gc-civ-has-knights gv-no))
 =>
 (set-goal gc-civ-has-knights gv-yes)
-(chat-local-to-self "Fact: Civ can build knights.")
+(up-chat-data-to-self "Fact: Civ can build knights." c: 0)
 (disable-self))
 
 ;;
@@ -68,12 +68,12 @@
         (false)))
 =>
 (set-goal gc-civ-has-bombard-cannons gv-no)
-(chat-local-to-self "Fact: Civ can NOT build bombard cannons.")
+(up-chat-data-to-self "Fact: Civ can NOT build bombard cannons." c: 0)
 (disable-self))
 
 (defrule
 (not (goal gc-civ-has-bombard-cannons gv-no))
 =>
 (set-goal gc-civ-has-bombard-cannons gv-yes)
-(chat-local-to-self "Fact: Civ can build bombard cannons.")
+(up-chat-data-to-self "Fact: Civ can build bombard cannons." c: 0)
 (disable-self))

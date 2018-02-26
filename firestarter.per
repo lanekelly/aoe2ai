@@ -8,6 +8,11 @@
 ; High population limit (500)
 ; Should build villagers and militia in parallel and attack!
 
+; Scripting notes
+;
+; Use (up-chat-local-to-self "{string}" c: 0) to display debug text since it will appear in replays as well.
+; "c: 0" is added to satisfy the parser for cases where no input is needed.
+
 ; ----- Constants -------------------------------------------------------------
 
 (defconst gv-yes 1)
@@ -153,7 +158,7 @@
 (unit-type-count-total villager >= 10)
 =>
 (set-strategic-number sn-minimum-number-hunters 5)
-(chat-local-to-self "Go slay the boar!")
+(up-chat-data-to-self "Go slay the boar!" c: 0)
 (disable-self))
 
 (defrule
@@ -177,7 +182,7 @@
 =>
 (set-strategic-number sn-total-number-explorers 1)
 (set-strategic-number sn-number-explore-groups 1)
-(chat-local-to-self "Dropping extra explorers")
+(up-chat-data-to-self "Dropping extra explorers" c: 0)
 (disable-self))
 
 ; ----- Castle, Imperial --------------
@@ -192,7 +197,7 @@
 (current-age == castle-age)
 =>
 (set-strategic-number sn-maximum-town-size 30)
-(chat-local-to-self "Expand the borders!")
+(up-chat-data-to-self "Expand the borders!" c: 0)
 (disable-self))
 
 ; -----------------------------------------------------------------------------
@@ -205,7 +210,7 @@
 =>
 (set-goal goal-age-status gv-advancing-to-feudal)
 (research feudal-age)
-(chat-local-to-self "Heading to Feudal!"))
+(up-chat-data-to-self "Heading to Feudal!" c: 0))
 
 (defrule
 (current-age == feudal-age)
@@ -218,7 +223,7 @@
 =>
 (research castle-age)
 (set-goal goal-age-status gv-advancing-to-castle)
-(chat-local-to-self "Heading to Castle!"))
+(up-chat-data-to-self "Heading to Castle!" c: 0))
 
 (defrule
 (current-age == castle-age)
@@ -231,7 +236,7 @@
 =>
 (research imperial-age)
 (set-goal goal-age-status gv-advancing-to-imperial)
-(chat-local-to-self "Heading to Imperial!!"))
+(up-chat-data-to-self "Heading to Imperial!!" c: 0))
 
 (defrule
 (current-age == imperial-age)
@@ -308,7 +313,7 @@
 =>
 (set-goal goal-dark-rush gv-dr-rushing)
 (enable-timer dark-rush-forward-build-timer 1)
-(chat-local-to-self "Rushing!"))
+(up-chat-data-to-self "Rushing!" c: 0))
 
 (defrule
 (timer-triggered dark-rush-forward-build-timer)
@@ -316,7 +321,7 @@
 (disable-timer dark-rush-forward-build-timer)
 (set-goal goal-dark-rush-forward-build gv-drbf-building)
 (up-assign-builders c: barracks c: 4)
-(chat-local-to-self "Building forward!"))
+(up-chat-data-to-self "Building forward!" c: 0))
 
 (defrule
 (goal goal-dark-rush-forward-build gv-drbf-building)
@@ -337,21 +342,21 @@
 =>
 (set-goal goal-dark-rush-forward-build gv-drbf-built)
 (up-assign-builders c: barracks c: 1)
-(chat-local-to-self "Forward barracks built, continue the rush!"))
+(up-chat-data-to-self "Forward barracks built, continue the rush!" c: 0))
 
 (defrule
 (goal goal-dark-rush-forward-build gv-drbf-built)
 (building-type-count barracks < max-dark-rush-barracks) ; destroyed
 =>
 (set-goal goal-dark-rush-forward-build gv-drbf-finished)
-(chat-local-to-self "Forward barracks destroyed..."))
+(up-chat-data-to-self "Forward barracks destroyed..." c: 0))
 
 (defrule
 (goal goal-dark-rush gv-dr-building)
 (game-time > 480)
 =>
 (set-goal goal-dark-rush gv-dr-finished)
-(chat-local-to-self "Skipping the rush, missed chance."))
+(up-chat-data-to-self "Skipping the rush, missed chance." c: 0))
 
 (defrule
 (goal goal-dark-rush gv-dr-rushing)
@@ -359,7 +364,7 @@
 (goal goal-dark-rush-forward-build gv-drbf-finished)
 =>
 (set-goal goal-dark-rush gv-dr-finished)
-(chat-local-to-self "Finished rushing 1."))
+(up-chat-data-to-self "Finished rushing 1." c: 0))
 
 (defrule
 (goal goal-dark-rush gv-dr-rushing)
@@ -367,14 +372,14 @@
 =>
 (set-goal goal-dark-rush gv-dr-finished)
 (set-goal goal-dark-rush-forward-build gv-drbf-finished)
-(chat-local-to-self "Finished rushing 2."))
+(up-chat-data-to-self "Finished rushing 2." c: 0))
 
 (defrule
 (goal goal-dark-rush gv-dr-finished)
 =>
 (set-strategic-number sn-maximum-hunt-drop-distance 15)
 ; [OFF] (set-strategic-number sn-enable-boar-hunting 0)
-(chat-local-to-self "Dropping hunt distance. The boar hunt is over for now.")
+(up-chat-data-to-self "Dropping hunt distance. The boar hunt is over for now." c: 0)
 (disable-self))
 
 ; -----------------------------------------------------------------------------
@@ -388,7 +393,7 @@
 (can-research ri-loom)
 =>
 (research ri-loom)
-(chat-local-to-self "Researching loom."))
+(up-chat-data-to-self "Researching loom." c: 0))
 
 ; ----- Feudal Age --------------------
 
@@ -396,13 +401,13 @@
 (can-research ri-wheel-barrow)
 =>
 (research ri-wheel-barrow)
-(chat-local-to-self "Researching wheel barrow."))
+(up-chat-data-to-self "Researching wheel barrow." c: 0))
 
 (defrule
 (can-research ri-cartography)
 =>
 (research ri-cartography)
-(chat-local-to-self "Researching cartography."))
+(up-chat-data-to-self "Researching cartography." c: 0))
 
 ; ----- Castle Age --------------------
 
@@ -411,28 +416,28 @@
 (can-research ri-double-bit-axe)
 =>
 (research ri-double-bit-axe)
-(chat-local-to-self "Researching double bit axe."))
+(up-chat-data-to-self "Researching double bit axe." c: 0))
 
 (defrule
 (current-age > feudal-age)
 (can-research ri-bow-saw)
 =>
 (research ri-bow-saw)
-(chat-local-to-self "Researching bow saw."))
+(up-chat-data-to-self "Researching bow saw." c: 0))
 
 (defrule
 (current-age > feudal-age)
 (can-research ri-horse-collar)
 =>
 (research ri-horse-collar)
-(chat-local-to-self "Researching horse collar."))
+(up-chat-data-to-self "Researching horse collar." c: 0))
 
 (defrule
 (current-age > feudal-age)
 (can-research ri-heavy-plow)
 =>
 (research ri-heavy-plow)
-(chat-local-to-self "Researching heavy plow."))
+(up-chat-data-to-self "Researching heavy plow." c: 0))
 
 ; ----- Imperial Age ------------------
 
@@ -450,7 +455,7 @@
 =>
 (research ri-murder-holes)
 (set-goal goal-ri-queued-university gv-yes)
-(chat-local-to-self "Researching murder holes."))
+(up-chat-data-to-self "Researching murder holes." c: 0))
 
 (defrule
 (current-age == imperial-age)
@@ -459,7 +464,7 @@
 =>
 (research ri-scale-mail)
 (set-goal goal-ri-queued-blacksmith gv-yes)
-(chat-local-to-self "Researching scale mail armor."))
+(up-chat-data-to-self "Researching scale mail armor." c: 0))
 
 (defrule
 (current-age == imperial-age)
@@ -468,14 +473,14 @@
 =>
 (research ri-forging)
 (set-goal goal-ri-queued-blacksmith gv-yes)
-(chat-local-to-self "Researching forging."))
+(up-chat-data-to-self "Researching forging." c: 0))
 
 (defrule
 (current-age == imperial-age)
 (can-research ri-pikeman)
 =>
 (research ri-pikeman)
-(chat-local-to-self "Researching pikeman."))
+(up-chat-data-to-self "Researching pikeman." c: 0))
 
 (defrule
 (current-age == imperial-age)
@@ -484,7 +489,7 @@
 =>
 (research ri-chain-mail)
 (set-goal goal-ri-queued-blacksmith gv-yes)
-(chat-local-to-self "Researching chain mail armor."))
+(up-chat-data-to-self "Researching chain mail armor." c: 0))
 
 (defrule
 (current-age == imperial-age)
@@ -493,42 +498,42 @@
 =>
 (research ri-iron-casting)
 (set-goal goal-ri-queued-blacksmith gv-yes)
-(chat-local-to-self "Researching iron casting."))
+(up-chat-data-to-self "Researching iron casting." c: 0))
 
 (defrule
 (current-age == imperial-age)
 (can-research ri-tracking)
 =>
 (research ri-tracking)
-(chat-local-to-self "Researching tracking."))
+(up-chat-data-to-self "Researching tracking." c: 0))
 
 (defrule
 (current-age == imperial-age)
 (can-research ri-squires)
 =>
 (research ri-squires)
-(chat-local-to-self "Researching squires."))
+(up-chat-data-to-self "Researching squires." c: 0))
 
 (defrule
 (current-age == imperial-age)
 (can-research ri-halberdier)
 =>
 (research ri-halberdier)
-(chat-local-to-self "Researching halbardier."))
+(up-chat-data-to-self "Researching halbardier." c: 0))
 
 (defrule
 (current-age == imperial-age)
 (can-research ri-arson)
 =>
 (research ri-arson)
-(chat-local-to-self "Researching arson."))
+(up-chat-data-to-self "Researching arson." c: 0))
 
 (defrule
 (current-age == imperial-age)
 (can-research ri-conscription)
 =>
 (research ri-conscription)
-(chat-local-to-self "Researching conscription."))
+(up-chat-data-to-self "Researching conscription." c: 0))
 
 (defrule
 (current-age == imperial-age)
@@ -537,7 +542,7 @@
 =>
 (research ri-blast-furnace)
 (set-goal goal-ri-queued-blacksmith gv-yes)
-(chat-local-to-self "Researching blast furnace."))
+(up-chat-data-to-self "Researching blast furnace." c: 0))
 
 (defrule
 (current-age == imperial-age)
@@ -546,7 +551,7 @@
 =>
 (research ri-plate-mail)
 (set-goal goal-ri-queued-blacksmith gv-yes)
-(chat-local-to-self "Researching plate mail."))
+(up-chat-data-to-self "Researching plate mail." c: 0))
 
 (defrule
 (current-age == imperial-age)
@@ -555,14 +560,14 @@
 =>
 (research ri-chemistry)
 (set-goal goal-ri-queued-university gv-yes)
-(chat-local-to-self "Researching chemistry."))
+(up-chat-data-to-self "Researching chemistry." c: 0))
 
 (defrule
 (current-age == imperial-age)
 (can-research ri-caravan)
 =>
 (research ri-caravan)
-(chat-local-to-self "Researching caravan."))
+(up-chat-data-to-self "Researching caravan." c: 0))
 
 (defrule
 (current-age == imperial-age)
@@ -572,7 +577,7 @@
 =>
 (research ri-chain-barding)
 (set-goal goal-ri-queued-blacksmith gv-yes)
-(chat-local-to-self "Researching chain barding."))
+(up-chat-data-to-self "Researching chain barding." c: 0))
 
 (defrule
 (current-age == imperial-age)
@@ -582,7 +587,7 @@
 =>
 (research ri-scale-barding)
 (set-goal goal-ri-queued-blacksmith gv-yes)
-(chat-local-to-self "Researching scale barding."))
+(up-chat-data-to-self "Researching scale barding." c: 0))
 
 (defrule
 (current-age == imperial-age)
@@ -592,7 +597,7 @@
 =>
 (research ri-plate-barding)
 (set-goal goal-ri-queued-blacksmith gv-yes)
-(chat-local-to-self "Researching plate barding."))
+(up-chat-data-to-self "Researching plate barding." c: 0))
 
 (defrule
 (current-age == imperial-age)
@@ -602,7 +607,7 @@
 =>
 (research ri-bloodlines)
 (set-goal goal-ri-queued-blacksmith gv-yes)
-(chat-local-to-self "Researching bloodlines."))
+(up-chat-data-to-self "Researching bloodlines." c: 0))
 
 (defrule
 (current-age == imperial-age)
@@ -612,7 +617,7 @@
 =>
 (research ri-cavalier)
 (set-goal goal-ri-queued-blacksmith gv-yes)
-(chat-local-to-self "Researching cavalier."))
+(up-chat-data-to-self "Researching cavalier." c: 0))
 
 (defrule
 (current-age == imperial-age)
@@ -622,7 +627,7 @@
 =>
 (research ri-paladin)
 (set-goal goal-ri-queued-blacksmith gv-yes)
-(chat-local-to-self "Researching paladin."))
+(up-chat-data-to-self "Researching paladin." c: 0))
 
 (defrule
 (current-age == imperial-age)
@@ -632,28 +637,28 @@
 =>
 (research ri-husbandry)
 (set-goal goal-ri-queued-blacksmith gv-yes)
-(chat-local-to-self "Researching husbandry."))
+(up-chat-data-to-self "Researching husbandry." c: 0))
 
 (defrule
 (current-age == imperial-age)
 (can-research ri-hand-cart)
 =>
 (research ri-hand-cart)
-(chat-local-to-self "Researching hand-cart."))
+(up-chat-data-to-self "Researching hand-cart." c: 0))
 
 (defrule
 (current-age == imperial-age)
 (can-research ri-town-patrol)
 =>
 (research ri-town-patrol)
-(chat-local-to-self "Researching town-patrol."))
+(up-chat-data-to-self "Researching town-patrol." c: 0))
 
 (defrule
 (current-age == imperial-age)
 (can-research ri-town-watch)
 =>
 (research ri-town-watch)
-(chat-local-to-self "Researching town-watch."))
+(up-chat-data-to-self "Researching town-watch." c: 0))
 
 (defrule
 (current-age == imperial-age)
@@ -661,7 +666,7 @@
 (can-research ri-capped-ram)
 =>
 (research ri-capped-ram)
-(chat-local-to-self "Researching capped ram."))
+(up-chat-data-to-self "Researching capped ram." c: 0))
 
 (defrule
 (current-age == imperial-age)
@@ -669,7 +674,7 @@
 (can-research ri-siege-ram)
 =>
 (research ri-siege-ram)
-(chat-local-to-self "Researching siege ram."))
+(up-chat-data-to-self "Researching siege ram." c: 0))
 
 ; -----------------------------------------------------------------------------
 
@@ -684,7 +689,7 @@
 (up-pending-objects c: house < 1) ; this rule will queue otherwise
 =>
 (build house)
-(chat-local-to-self "House rule 1"))
+(up-chat-data-to-self "House rule 1" c: 0))
 
 (defrule
 (goal goal-dark-rush gv-dr-finished)
@@ -694,7 +699,7 @@
 (up-pending-objects c: house < 1)
 =>
 (build house)
-(chat-local-to-self "House rule 2"))
+(up-chat-data-to-self "House rule 2" c: 0))
 
 ; ASAP
 (defrule
@@ -702,7 +707,7 @@
 (can-build barracks)
 =>
 (build barracks)
-(chat-local-to-self "Barracks rule 1"))
+(up-chat-data-to-self "Barracks rule 1" c: 0))
 
 (defrule
 (building-type-count-total house > 0)
@@ -729,7 +734,7 @@
 (up-pending-objects c: farm < 1)
 =>
 (build farm)
-(chat-local-to-self "Farm rule 1"))
+(up-chat-data-to-self "Farm rule 1" c: 0))
 
 (defrule
 (current-age > dark-age)
@@ -738,14 +743,14 @@
 (can-build farm)
 =>
 (build farm)
-(chat-local-to-self "Farm rule 2"))
+(up-chat-data-to-self "Farm rule 2" c: 0))
 
 (defrule
 (building-type-count-total lumber-camp > 0)
 (strategic-number sn-camp-max-distance < 35)
 =>
 (set-strategic-number sn-camp-max-distance 35)
-(chat-local-to-self "Camp distance 35.")
+(up-chat-data-to-self "Camp distance 35." c: 0)
 (disable-self))
 
 (defrule
@@ -798,14 +803,14 @@
 (building-type-count-total castle < 2)
 =>
 (build castle)
-(chat-local-to-self "Castle rule 1"))
+(up-chat-data-to-self "Castle rule 1" c: 0))
 
 (defrule
 (building-type-count-total town-center < 6)
 (can-build town-center)
 =>
 (build town-center)
-(chat-local-to-self "Town center rule 1"))
+(up-chat-data-to-self "Town center rule 1" c: 0))
 
 (defrule
 (or (current-age == castle-age)
@@ -817,7 +822,7 @@
 (up-pending-objects c: house < 2)
 =>
 (build house)
-(chat-local-to-self "House rule 3"))
+(up-chat-data-to-self "House rule 3" c: 0))
 
 (defrule
 (civilian-population > 100)
@@ -826,7 +831,7 @@
 (can-build farm)
 =>
 (build farm)
-(chat-local-to-self "Farm rule 3"))
+(up-chat-data-to-self "Farm rule 3" c: 0))
 
 ; ----- Imperial ----------------------
 
@@ -836,7 +841,7 @@
 (can-build university)
 =>
 (build university)
-(chat-local-to-self "University rule 1"))
+(up-chat-data-to-self "University rule 1" c: 0))
 
 (defrule
 (goal goal-flood-spearmen gv-yes)
@@ -845,7 +850,7 @@
 (can-build barracks)
 =>
 (build barracks)
-(chat-local-to-self "Barracks rule 2"))
+(up-chat-data-to-self "Barracks rule 2" c: 0))
 
 (defrule
 (goal goal-flood-spearmen gv-yes)
@@ -854,7 +859,7 @@
 (can-build barracks)
 =>
 (build barracks)
-(chat-local-to-self "Barracks rule 3"))
+(up-chat-data-to-self "Barracks rule 3" c: 0))
 
 ; May need to balance creation order btwn these and barracks
 (defrule
@@ -864,7 +869,7 @@
 (can-build stable)
 =>
 (build stable)
-(chat-local-to-self "Build stable rule 1"))
+(up-chat-data-to-self "Build stable rule 1" c: 0))
 
 (defrule
 (current-age == imperial-age)
@@ -872,7 +877,7 @@
 (can-build siege-workshop)
 =>
 (build siege-workshop)
-(chat-local-to-self "Siege workshop rule 1"))
+(up-chat-data-to-self "Siege workshop rule 1" c: 0))
 
 ; [OFF] currently broken
 ;(defrule
@@ -882,14 +887,14 @@
 ;(can-build castle)
 ;=>
 ;(build-forward castle)
-;(chat-local-to-self "Castle rule 2 (forward)"))
+;(up-chat-data-to-self "Castle rule 2 (forward)" c: 0))
 
 (defrule
 (current-age == imperial-age)
 =>
 (set-strategic-number sn-camp-max-distance 360)
 (disable-self)
-(chat-local-to-self "Camp distance: 360"))
+(up-chat-data-to-self "Camp distance: 360" c: 0))
 
 (defrule
 (building-type-count farm > 15)
@@ -897,7 +902,7 @@
 (can-build mill)
 =>
 (build mill)
-(chat-local-to-self "Mill rule 2"))
+(up-chat-data-to-self "Mill rule 2" c: 0))
 
 (defrule
 (building-type-count farm > 25)
@@ -905,7 +910,7 @@
 (can-build mill)
 =>
 (build mill)
-(chat-local-to-self "Mill rule 3"))
+(up-chat-data-to-self "Mill rule 3" c: 0))
 
 (defrule
 (building-type-count farm > 30)
@@ -913,7 +918,7 @@
 (can-build mill)
 =>
 (build mill)
-(chat-local-to-self "Mill rule 4"))
+(up-chat-data-to-self "Mill rule 4" c: 0))
 
 ; -----------------------------------------------------------------------------
 
@@ -940,7 +945,7 @@
 (unit-type-count-total militiaman-line >= end-dark-rush-militia-count)
 =>
 (set-goal goal-max-militia-reached gv-yes)
-(chat-local-to-self "Done training rush militia.")
+(up-chat-data-to-self "Done training rush militia." c: 0)
 (disable-self))
 
 (defrule
@@ -966,14 +971,14 @@
 (goal goal-army-status gv-army-status-idle)
 =>
 (set-goal goal-army-composition gv-army-comp-offensive)
-(chat-local-to-self "Building an attack force"))
+(up-chat-data-to-self "Building an attack force" c: 0))
 
 (defrule
 (goal goal-army-composition gv-army-comp-offensive)
 (goal goal-army-status gv-army-status-defending)
 =>
 (set-goal goal-army-composition gv-army-comp-defensive)
-(chat-local-to-self "Reverting to defensive focus"))
+(up-chat-data-to-self "Reverting to defensive focus" c: 0))
 
 (defrule
 (goal goal-army-composition gv-army-comp-offensive)
@@ -1040,7 +1045,7 @@
 (attack-now)
 (disable-timer dark-rush-timer)
 (enable-timer dark-rush-timer 60)
-(chat-local-to-self "Attack now!"))
+(up-chat-data-to-self "Attack now!" c: 0))
 
 ; -------------------------------------
 
@@ -1052,21 +1057,21 @@
 (set-goal goal-army-status gv-army-status-attacking)
 (set-goal goal-tsa gv-yes)
 (set-strategic-number sn-enemy-sighted-response-distance 2)
-(chat-local-to-self "Begin the siege!"))
+(up-chat-data-to-self "Begin the siege!" c: 0))
 
 (defrule
 (goal goal-tsa gv-yes)
 (not(enemy-buildings-in-town))
 =>
 (up-modify-sn sn-maximum-town-size c:+ 2)
-(up-chat-data-to-self "town size: %d" s: sn-maximum-town-size))
+(up-chat-data-to-self  "town size: %d" s: sn-maximum-town-size))
 
 (defrule
 (goal goal-tsa gv-yes)
 (enemy-buildings-in-town)
 =>
 (set-goal goal-tsa gv-no)
-(chat-local-to-self "Maxed out TSA. Attack!"))
+(up-chat-data-to-self "Maxed out TSA. Attack!" c: 0))
 
 (defrule
 (goal goal-tsa gv-no)
@@ -1074,7 +1079,7 @@
 (goal goal-army-status gv-army-status-attacking)
 =>
 (set-goal goal-tsa gv-yes)
-(chat-local-to-self "Press further!"))
+(up-chat-data-to-self "Press further!" c: 0))
 
 (defrule
 ;(or (military-population < 20)
@@ -1086,8 +1091,8 @@
 (set-goal goal-tsa gv-no)
 (set-goal goal-army-status gv-army-status-defending)
 (set-strategic-number sn-maximum-town-size 30)
-(chat-local-to-self "Fall back!")
-(up-chat-data-to-self "town size: %d" s: sn-maximum-town-size))
+(up-chat-data-to-self "Fall back!" c: 0)
+(up-chat-data-to-self  "town size: %d" s: sn-maximum-town-size))
 
 ; -----------------------------------------------------------------------------
 
@@ -1101,7 +1106,7 @@
 (set-goal goal-flood-spearmen gv-no)
 (set-goal goal-army-status gv-army-status-idle)
 (set-strategic-number sn-enemy-sighted-response-distance 25)
-(chat-local-to-self "Army is now idle"))
+(up-chat-data-to-self "Army is now idle" c: 0))
 
 (defrule
 (or (current-age == castle-age)
@@ -1113,14 +1118,14 @@
 (set-goal goal-flood-spearmen gv-yes)
 (set-strategic-number sn-enemy-sighted-response-distance 144)
 (enable-timer generic-defend-timer 30)
-(chat-local-to-self "We're under attack!"))
+(up-chat-data-to-self "We're under attack!" c: 0))
 
 (defrule
 (timer-triggered generic-defend-timer)
 (not (town-under-attack))
 =>
 (disable-timer generic-defend-timer)
-(chat-local-to-self "No longer under attack"))
+(up-chat-data-to-self "No longer under attack" c: 0))
 
 (defrule
 (timer-triggered generic-defend-timer)
@@ -1128,7 +1133,7 @@
 =>
 (disable-timer generic-defend-timer)
 (enable-timer generic-defend-timer 30)
-(chat-local-to-self "Still under attack"))
+(up-chat-data-to-self "Still under attack" c: 0))
 
 ; -----------------------------------------------------------------------------
 
@@ -1147,7 +1152,7 @@
 (up-modify-sn sn-maximum-town-size c:+ 2)
 (disable-timer increase-town-size-timer)
 (enable-timer increase-town-size-timer 30)
-(up-chat-data-to-self "town size: %d" s: sn-maximum-town-size))
+(up-chat-data-to-self  "town size: %d" s: sn-maximum-town-size))
 
 (defrule
 (timer-triggered increase-town-size-timer)
@@ -1171,13 +1176,13 @@
 (wood-amount > 8000)
 =>
 (sell-commodity wood)
-(chat-local-to-self "selling excess wood"))
+(up-chat-data-to-self "selling excess wood" c: 0))
 
 (defrule
 (current-age == imperial-age)
 (food-amount > 8000)
 =>
 (sell-commodity food)
-(chat-local-to-self "selling excess food"))
+(up-chat-data-to-self "selling excess food" c: 0))
 
 ; -----------------------------------------------------------------------------
