@@ -26,7 +26,8 @@
 (defconst gv-advancing-to-imperial 5)
 (defconst gv-imperial-age 6)
 
-(defconst max-num-dark-villagers 22)
+(defconst dark-age-rush-max-villagers 22)
+(defconst feudal-advance-min-villagers 25)
 (defconst max-town-size 60)
 (defconst max-dark-rush-barracks 3)
 
@@ -62,6 +63,9 @@
 (defconst gc-civ-has-knights 100)
 (defconst gc-civ-has-bombard-cannons 101)
 
+(defconst gc-some-enemy-is-ai 102)
+(defconst gc-every-enemy-is-ai 103)
+
 ; ; ; ; ; ; ; ; ; ; ;
 
 (defconst start-dark-rush-militia-count 5)
@@ -70,6 +74,7 @@
 (defconst gv-dr-building 1) ; dark rush states
 (defconst gv-dr-rushing 2)
 (defconst gv-dr-finished 3)
+(defconst gv-dr-disabled 4)
 
 (defconst gv-drbf-not-started 1) ; dark rush forward build states
 (defconst gv-drbf-building 2)
@@ -84,12 +89,12 @@
 (defconst scout-unlock-time 180)
 #end-if
 
+(load "gameconstants")
+
 ; Initial state
 (defrule
 (true)
 =>
-(set-goal goal-dark-rush gv-dr-building)
-(set-goal goal-max-militia-reached gv-no)
 (set-goal goal-age-status gv-dark-age)
 (set-goal goal-flood-spearmen gv-no)
 (set-goal goal-army-status gv-army-status-idle)
@@ -97,9 +102,22 @@
 (set-goal goal-tsa gv-no)
 (set-goal goal-ri-queued-blacksmith gv-no)
 (set-goal goal-dark-rush-forward-build gv-drbf-not-started)
+(set-goal goal-max-militia-reached gv-no)
 (disable-self))
 
-(load "gameconstants")
+(defrule
+(goal gc-every-enemy-is-ai gv-no)
+=>
+(set-goal goal-dark-rush gv-dr-building)
+(up-chat-data-to-self "Will attempt dark age rush since at least one enemy is human." c: 0)
+(disable-self))
+
+(defrule
+(goal gc-every-enemy-is-ai gv-yes)
+=>
+(set-goal goal-dark-rush gv-dr-disabled)
+(up-chat-data-to-self "Skipping dark age rush since every enemy is AI." c: 0)
+(disable-self))
 
 ; -----------------------------------------------------------------------------
 
@@ -152,6 +170,7 @@
 (set-strategic-number sn-cap-civilian-explorers 0)
 (set-strategic-number sn-total-number-explorers 5)
 (set-strategic-number sn-number-explore-groups 5)
+(up-chat-data-to-self "Found food. Dropping villager explorers." c: 0)
 (disable-self))
 
 (defrule
@@ -185,6 +204,16 @@
 (up-chat-data-to-self "Found an enemy building. Dropping extra explorers" c: 0)
 (disable-self))
 
+; ----- Feudal ------------------------
+
+(defrule
+(current-age > dark-age)
+=>
+(set-strategic-number sn-maximum-hunt-drop-distance 15)
+; [OFF] (set-strategic-number sn-enable-boar-hunting 0)
+(up-chat-data-to-self "Dropping hunt distance." c: 0)
+(disable-self))
+
 ; ----- Castle, Imperial --------------
 
 (defrule
@@ -193,19 +222,14 @@
 =>
 (set-strategic-number sn-cap-civilian-builders 100))
 
-(defrule
-(current-age == castle-age)
-=>
-(set-strategic-number sn-maximum-town-size 30)
-(up-chat-data-to-self "Now in Castle Age. Expand town size to 30." c: 0)
-(disable-self))
-
 ; -----------------------------------------------------------------------------
 
 ; ----- Age Advancement -------------------------------------------------------
 
 (defrule
-(goal goal-dark-rush gv-dr-finished)
+(or (goal goal-dark-rush gv-dr-disabled)
+    (goal goal-dark-rush gv-dr-finished))
+(unit-type-count-total villager >= feudal-advance-min-villagers)
 (can-research feudal-age)
 =>
 (set-goal goal-age-status gv-advancing-to-feudal)
@@ -374,22 +398,15 @@
 (set-goal goal-dark-rush-forward-build gv-drbf-finished)
 (up-chat-data-to-self "Finished rushing since game time has passed 12 minutes." c: 0))
 
-(defrule
-(goal goal-dark-rush gv-dr-finished)
-=>
-(set-strategic-number sn-maximum-hunt-drop-distance 15)
-; [OFF] (set-strategic-number sn-enable-boar-hunting 0)
-(up-chat-data-to-self "Dropping hunt distance. The boar hunt is over for now." c: 0)
-(disable-self))
-
 ; -----------------------------------------------------------------------------
 
 ; ----- Tech ------------------------------------------------------------------
 
 ; ----- Dark Age ----------------------
 (defrule
-(or (food-amount < 50)
-    (goal goal-dark-rush-forward-build gv-drbf-building))
+(or (or (food-amount < 50)
+        (goal goal-dark-rush-forward-build gv-drbf-building))
+    (current-age > dark-age))
 (can-research ri-loom)
 =>
 (research ri-loom)
@@ -692,7 +709,8 @@
 (up-chat-data-to-self "Building house since headroom < 7" c: 0))
 
 (defrule
-(goal goal-dark-rush gv-dr-finished)
+(or (goal goal-dark-rush gv-dr-finished)
+    (goal goal-dark-rush gv-dr-disabled))
 (can-build house)
 (housing-headroom < 4)
 (population-headroom > 3)
@@ -703,11 +721,12 @@
 
 ; ASAP
 (defrule
+(goal goal-dark-rush gv-dr-building)
 (building-type-count-total barracks < 1)
 (can-build barracks)
 =>
 (build barracks)
-(up-chat-data-to-self "Building a barracks ASAP" c: 0))
+(up-chat-data-to-self "Building a barracks ASAP for dark age rush." c: 0))
 
 (defrule
 (building-type-count-total house > 0)
@@ -723,7 +742,8 @@
 (resource-found wood)
 (can-build lumber-camp)
 =>
-(build lumber-camp))
+(build lumber-camp)
+(up-chat-data-to-self "Building first lumber camp." c: 0))
 
 (defrule
 (or (goal goal-age-status gv-dark-age)
@@ -737,21 +757,29 @@
 (up-chat-data-to-self "Building a farm now that rush is over" c: 0))
 
 (defrule
-(current-age > dark-age)
+(or (current-age > dark-age)
+    (goal goal-age-status gv-advancing-to-feudal))
 (idle-farm-count == 0)
 (up-pending-objects c: farm < 1)
 (can-build farm)
 =>
 (build farm)
-(up-chat-data-to-self "Building a farm to satisfy food gatherer %" c: 0))
+(up-chat-data-to-self "Building a farm to satisfy food gatherer percentage" c: 0))
 
+; build another lumber camp once the nearest wood becomes too far away from a dropsite
 (defrule
-(building-type-count-total lumber-camp > 0)
-(strategic-number sn-camp-max-distance < 35)
+(up-pending-objects c: lumber-camp == 0)
+(building-type-count lumber-camp > 0)
+(resource-found wood)
+(dropsite-min-distance wood > 3)
+(dropsite-min-distance wood < 255) ; don't go too far away
+; (strategic-number sn-camp-max-distance <= 476) ; max size of map?
+(can-build lumber-camp)
 =>
-(set-strategic-number sn-camp-max-distance 35)
-(up-chat-data-to-self "First lumber camp built/placed, increasing camp distance to 35." c: 0)
-(disable-self))
+; [OFF] (up-modify-sn sn-camp-max-distance c:+ 4)
+(build lumber-camp)
+(up-chat-data-to-self "Building a lumber camp since wood is more than 5 tiles away." c: 0))
+; (up-chat-data-to-self "Increased max camp distance to: %d" s: sn-camp-max-distance))
 
 (defrule
 (or (current-age > dark-age)
@@ -808,11 +836,19 @@
 (up-chat-data-to-self "Building a castle since there are 3+ town centers" c: 0))
 
 (defrule
-(building-type-count-total town-center < 6)
+(building-type-count-total town-center < 3)
 (can-build town-center)
 =>
 (build town-center)
-(up-chat-data-to-self "Building a town center since count < 6." c: 0))
+(up-chat-data-to-self "Building a town center since count < 3." c: 0))
+
+(defrule
+(building-type-count-total town-center < 6)
+(can-build town-center)
+(civilian-population > 75)
+=>
+(build town-center)
+(up-chat-data-to-self "Building a town center since pop > 75 and TC count < 6." c: 0))
 
 (defrule
 (or (current-age == castle-age)
@@ -928,14 +964,17 @@
 
 (defrule
 (current-age == dark-age)
-(unit-type-count-total villager < max-num-dark-villagers)
+(or (goal goal-dark-rush gv-dr-building)
+    (goal goal-dark-rush gv-dr-rushing))
+(unit-type-count-total villager < dark-age-rush-max-villagers)
 (can-train villager)
 =>
 (train villager))
 
 ; constantly train villagers
 (defrule
-(not (current-age == dark-age))
+(or (goal goal-dark-rush gv-dr-finished)
+    (goal goal-dark-rush gv-dr-disabled))
 (unit-type-count-total villager < 200)
 (can-train villager)
 =>
@@ -985,8 +1024,7 @@
 (defrule
 (goal goal-army-composition gv-army-comp-offensive)
 =>
-(set-goal goal-flood-spearmen gv-yes)
-(up-chat-data-to-self "Using the flood-spearmen strategy." c: 0))
+(set-goal goal-flood-spearmen gv-yes))
 
 (defrule
 (goal goal-flood-spearmen gv-yes)
@@ -1167,7 +1205,8 @@
 (current-age == castle-age)
 (civilian-population > 100)
 =>
-(up-modify-sn sn-maximum-town-size c:+ 20)
+(up-modify-sn sn-maximum-town-size c:+ 10)
+(up-chat-data-to-self "Town size increased since pop > 100. New size : %d" s: sn-maximum-town-size)
 (disable-self))
 
 ; -----------------------------------------------------------------------------

@@ -77,3 +77,28 @@
 (set-goal gc-civ-has-bombard-cannons gv-yes)
 (up-chat-data-to-self "Fact: Civ can build bombard cannons." c: 0)
 (disable-self))
+
+; Determine if playing against any computer players
+(defrule
+(player-computer any-enemy)
+(not (player-computer every-enemy))
+=>
+(set-goal gc-some-enemy-is-ai gv-yes)
+(set-goal gc-every-enemy-is-ai gv-no)
+(up-chat-data-to-self "Fact: Some of the enemies are AI." c: 0)
+(disable-self))
+
+(defrule
+(player-computer every-enemy)
+=>
+(set-goal gc-some-enemy-is-ai gv-no)
+(set-goal gc-every-enemy-is-ai gv-yes)
+(up-chat-data-to-self "Fact: Every enemy is AI." c: 0)
+(disable-self))
+
+(defrule
+(not (player-computer any-enemy))
+=>
+(set-goal gc-some-enemy-is-ai gv-no)
+(set-goal gc-every-enemy-is-ai gv-no)
+(up-chat-data-to-self "Fact: Every enemy is human." c: 0))
